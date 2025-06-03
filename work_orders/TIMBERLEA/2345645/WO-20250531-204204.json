@@ -1,0 +1,20 @@
+{
+  "work_order_number": "WO-20250531-204204",
+  "quote_number": "000090",
+  "customer_name": "TIMBERLEA",
+  "customer_po": "2345645",
+  "date_required": "2025-05-31",
+  "date_created": "2025-05-31",
+  "tolerance": "",
+  "notes": "TEST 2",
+  "max_skid_weight": "5000",
+  "pieces_per_skid": "50",
+  "max_od": "72",
+  "wood_spacers": true,
+  "paper_wrapped": true,
+  "coil_direction": "CW",
+  "split_coil": true,
+  "process_type": "both",
+  "ctl_jobs": [],
+  "slitting_jobs": []
+}

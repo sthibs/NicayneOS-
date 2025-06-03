@@ -1,0 +1,20 @@
+{
+  "work_order_number": "WO-20250531-044851",
+  "quote_number": "Q-2025-001",
+  "customer_name": "Test Manufacturing Corp",
+  "customer_po": "PO-TEST-2025-001",
+  "date_required": "2025-06-15",
+  "date_created": "2025-05-31",
+  "tolerance": "\u00b10.001",
+  "notes": "",
+  "max_skid_weight": "",
+  "pieces_per_skid": "",
+  "max_od": "",
+  "wood_spacers": true,
+  "paper_wrapped": true,
+  "coil_direction": "eye_horizontal",
+  "split_coil": false,
+  "process_type": "cut_to_length",
+  "ctl_jobs": [],
+  "slitting_jobs": []
+}

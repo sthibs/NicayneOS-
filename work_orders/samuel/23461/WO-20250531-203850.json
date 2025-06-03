@@ -1,0 +1,20 @@
+{
+  "work_order_number": "WO-20250531-203850",
+  "quote_number": "12348",
+  "customer_name": "samuel",
+  "customer_po": "23461",
+  "date_required": "2025-06-09",
+  "date_created": "2025-05-31",
+  "tolerance": "",
+  "notes": "testing_enhanced_validation",
+  "max_skid_weight": "5000",
+  "pieces_per_skid": "50",
+  "max_od": "72",
+  "wood_spacers": false,
+  "paper_wrapped": false,
+  "coil_direction": "",
+  "split_coil": false,
+  "process_type": "both",
+  "ctl_jobs": [],
+  "slitting_jobs": []
+}

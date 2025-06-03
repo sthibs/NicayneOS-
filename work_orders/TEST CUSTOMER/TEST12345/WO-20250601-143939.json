@@ -1,0 +1,20 @@
+{
+  "work_order_number": "WO-20250601-143939",
+  "quote_number": "",
+  "customer_name": "TEST CUSTOMER ",
+  "customer_po": "TEST12345",
+  "date_required": "2025-06-07",
+  "date_created": "2025-06-01",
+  "tolerance": "",
+  "notes": "",
+  "max_skid_weight": "",
+  "pieces_per_skid": "",
+  "max_od": "72",
+  "wood_spacers": true,
+  "paper_wrapped": false,
+  "coil_direction": "CCW",
+  "split_coil": true,
+  "process_type": "both",
+  "ctl_jobs": [],
+  "slitting_jobs": []
+}
