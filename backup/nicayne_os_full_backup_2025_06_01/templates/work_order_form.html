@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}Work Order Form - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+    <div class="nmp-card">
+        <div class="nmp-card-header">Work Order Form</div>
+        <div class="nmp-card-body">
+            <p style="margin-bottom: 30px; color: #666; font-size: 1.1rem;">Manufacturing Order Management System</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}" style="padding: 15px; margin-bottom: 20px; border-radius: 8px; {{ 'background: #d4edda; border: 1px solid #c3e6cb; color: #155724;' if category == 'success' else 'background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;' }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="/work-order-form">
+                <!-- General Job Info -->
+                <div class="nmp-form-group">
+                    <label class="nmp-form-label">General Job Information</label>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Work Order #</label>
+                            <input type="text" name="work_order_number" readonly value="AUTO-GENERATED" class="nmp-form-control" style="background: #f5f5f5;">
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Quote Number</label>
+                            <input type="text" name="quote_number" value="{{ form_data.quote_number if form_data else '' }}" class="nmp-form-control">
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer Name</label>
+                            <input type="text" name="customer_name" value="{{ form_data.customer_name if form_data else '' }}" required class="nmp-form-control">
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 20px;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer PO</label>
+                            <input type="text" name="customer_po" value="{{ form_data.customer_po if form_data else '' }}" class="nmp-form-control">
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date Required</label>
+                            <input type="date" name="date_required" value="{{ form_data.date_required if form_data else '' }}" class="nmp-form-control">
+                        </div>
+                        <div style="flex: 1; min-width: 200px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date Created</label>
+                            <input type="date" name="date_created" value="{{ form_data.date_created if form_data else today }}" class="nmp-form-control">
+                        </div>
+                    </div>
+
+                    <!-- Additional Job Information Fields -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Max Bundle/Skid Weight (lbs)</label>
+                            <input type="number" name="max_bundle_weight" class="nmp-form-control" step="1" min="0" placeholder="Enter max weight" value="{{ form_data.max_bundle_weight if form_data else '' }}">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Requested Pieces per Bundle</label>
+                            <input type="number" name="pieces_per_bundle" class="nmp-form-control" step="1" min="1" placeholder="Enter pieces" value="{{ form_data.pieces_per_bundle if form_data else '' }}">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Max Outside Diameter (OD) (in)</label>
+                            <input type="number" name="max_od" class="nmp-form-control" step="0.1" min="0" placeholder="Enter OD" value="{{ form_data.max_od if form_data else '' }}">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Coil Direction on Skid</label>
+                            <select name="coil_direction" class="nmp-form-control">
+                                <option value="">Select Direction</option>
+                                <option value="CW" {{ 'selected' if form_data and form_data.coil_direction == 'CW' else '' }}>CW (Clockwise)</option>
+                                <option value="CCW" {{ 'selected' if form_data and form_data.coil_direction == 'CCW' else '' }}>CCW (Counter-Clockwise)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Toggle Options -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 10px; font-weight: 600;">Split Coil</label>
+                            <div style="display: flex; gap: 15px;">
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="radio" name="split_coil" value="yes" style="margin: 0;" {{ 'checked' if form_data and form_data.split_coil == 'yes' else '' }}>
+                                    <span>Yes</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="radio" name="split_coil" value="no" style="margin: 0;" {{ 'checked' if form_data and form_data.split_coil == 'no' else '' }}>
+                                    <span>No</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 10px; font-weight: 600;">Wood Spacers</label>
+                            <div style="display: flex; gap: 15px;">
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="radio" name="wood_spacers" value="yes" style="margin: 0;" {{ 'checked' if form_data and form_data.wood_spacers == 'yes' else '' }}>
+                                    <span>Yes</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="radio" name="wood_spacers" value="no" style="margin: 0;" {{ 'checked' if form_data and form_data.wood_spacers == 'no' else '' }}>
+                                    <span>No</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 10px; font-weight: 600;">Paper Wrap</label>
+                            <div style="display: flex; gap: 15px;">
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="radio" name="paper_wrap" value="yes" style="margin: 0;" {{ 'checked' if form_data and form_data.paper_wrap == 'yes' else '' }}>
+                                    <span>Yes</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="radio" name="paper_wrap" value="no" style="margin: 0;" {{ 'checked' if form_data and form_data.paper_wrap == 'no' else '' }}>
+                                    <span>No</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 10px; font-weight: 600;">Edge Protectors</label>
+                            <div style="display: flex; gap: 15px;">
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="radio" name="edge_protectors" value="yes" style="margin: 0;" {{ 'checked' if form_data and form_data.edge_protectors == 'yes' else '' }}>
+                                    <span>Yes</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                                    <input type="radio" name="edge_protectors" value="no" style="margin: 0;" {{ 'checked' if form_data and form_data.edge_protectors == 'no' else '' }}>
+                                    <span>No</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Packaging Instructions / Customer Request</label>
+                        <textarea name="packaging_instructions" rows="3" class="nmp-form-control">{{ form_data.packaging_instructions if form_data else '' }}</textarea>
+                    </div>
+                </div>
+
+                <!-- Tolerances -->
+                <div class="nmp-form-group">
+                    <label class="nmp-form-label">Tolerances</label>
+                    <div id="tolerance-group">
+                        <div class="tolerance-set" style="margin-bottom: 15px; padding: 15px; background: #f8fafe; border-radius: 8px; border: 1px solid var(--steel-gray);">
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Thickness Tolerance</label>
+                                    <input type="text" name="tolerance_thickness[]" class="nmp-form-control">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Width Tolerance</label>
+                                    <input type="text" name="tolerance_width[]" class="nmp-form-control">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Length Tolerance</label>
+                                    <input type="text" name="tolerance_length[]" class="nmp-form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addToleranceSet()" class="nmp-btn nmp-btn-secondary">Add Tolerance Set</button>
+                </div>
+
+                <!-- Process Type -->
+                <div class="nmp-form-group">
+                    <label class="nmp-form-label">Process Type</label>
+                    <select name="process_type" onchange="toggleJobSections()" class="nmp-form-control">
+                        <option value="">Select Process Type</option>
+                        <option value="cut_to_length" {{ 'selected' if form_data and form_data.process_type == 'cut_to_length' else '' }}>Cut to Length</option>
+                        <option value="slitting" {{ 'selected' if form_data and form_data.process_type == 'slitting' else '' }}>Slitting</option>
+                        <option value="both" {{ 'selected' if form_data and form_data.process_type == 'both' else '' }}>Both</option>
+                    </select>
+                </div>
+
+                <!-- Cut to Length Section -->
+                <div id="ctl-section" class="nmp-form-group" style="display: none;">
+                    <label class="nmp-form-label">Cut to Length Jobs</label>
+                    <div id="ctl-group">
+                        <div class="job-set" style="background: #f8fafe; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--steel-gray);">
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Grade</label>
+                                    <input type="text" name="ctl_material_grade[]" class="nmp-form-control">
+                                </div>
+                                <div style="flex: 2; min-width: 200px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Description</label>
+                                    <input type="text" name="ctl_material_description[]" class="nmp-form-control">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Coils</label>
+                                    <input type="text" name="ctl_incoming_coils[]" class="nmp-form-control">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Weight (lbs)</label>
+                                    <input type="text" name="ctl_incoming_weight[]" class="nmp-form-control">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Finished Pieces</label>
+                                    <input type="text" name="ctl_finished_pieces[]" class="nmp-form-control">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Finished Weight</label>
+                                    <input type="text" name="ctl_finished_weight[]" class="nmp-form-control">
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer Tags</label>
+                                <input type="text" name="ctl_customer_tags[]" class="nmp-form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addCtlJob()" class="nmp-btn nmp-btn-secondary">Add CTL Job</button>
+                </div>
+
+                <!-- Slitting Section -->
+                <div id="slit-section" class="nmp-form-group" style="display: none;">
+                    <label class="nmp-form-label">Slitting Jobs</label>
+                    <div id="slit-group">
+                        <div class="job-set" style="background: #f8fafe; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--steel-gray);">
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Grade</label>
+                                    <input type="text" name="slit_material_grade[]" class="nmp-form-control">
+                                </div>
+                                <div style="flex: 2; min-width: 200px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Coil Description</label>
+                                    <input type="text" name="slit_coil_description[]" class="nmp-form-control">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Coils</label>
+                                    <input type="text" name="slit_incoming_coils[]" class="nmp-form-control">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Weight (lbs)</label>
+                                    <input type="text" name="slit_incoming_weight[]" class="nmp-form-control">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">OD Size</label>
+                                    <input type="text" name="slit_od_size[]" class="nmp-form-control">
+                                </div>
+                                <div style="flex: 1; min-width: 150px;">
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">PIW</label>
+                                    <input type="text" name="slit_piw[]" class="nmp-form-control">
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Slitter Setup</label>
+                                <input type="text" name="slit_setup[]" class="nmp-form-control">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer Tags</label>
+                                <input type="text" name="slit_customer_tags[]" class="nmp-form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="addSlitJob()" class="nmp-btn nmp-btn-secondary">Add Slitting Job</button>
+                </div>
+
+                <div style="margin-top: 30px; text-align: center;">
+                    <button type="submit" class="nmp-btn">
+                        {% if is_reopen %}Update Work Order{% else %}Submit Work Order{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function addToleranceSet() {
+            const group = document.getElementById("tolerance-group");
+            const div = document.createElement("div");
+            div.className = "tolerance-set";
+            div.style.cssText = "margin-bottom: 15px; padding: 15px; background: #f8fafe; border-radius: 8px; border: 1px solid var(--steel-gray);";
+            div.innerHTML = `
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Thickness Tolerance</label>
+                        <input type="text" name="tolerance_thickness[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Width Tolerance</label>
+                        <input type="text" name="tolerance_width[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Length Tolerance</label>
+                        <input type="text" name="tolerance_length[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 0 0 auto; align-self: end;">
+                        <button type="button" onclick="removeToleranceSet(this)" class="nmp-btn" style="background: #dc3545; margin-top: 27px;">Remove</button>
+                    </div>
+                </div>
+            `;
+            group.appendChild(div);
+        }
+
+        function removeToleranceSet(button) {
+            const toleranceGroup = document.getElementById("tolerance-group");
+            if (toleranceGroup.children.length > 1) {
+                button.closest('.tolerance-set').remove();
+            }
+        }
+
+        function addCtlJob() {
+            const group = document.getElementById("ctl-group");
+            const div = document.createElement("div");
+            div.className = "job-set";
+            div.style.cssText = "background: #f8fafe; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--steel-gray);";
+            div.innerHTML = `
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Grade</label>
+                        <input type="text" name="ctl_material_grade[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 2; min-width: 200px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Description</label>
+                        <input type="text" name="ctl_material_description[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 0 0 auto; align-self: end;">
+                        <button type="button" onclick="removeCtlJob(this)" class="nmp-btn" style="background: #dc3545; margin-top: 27px;">Remove</button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Coils</label>
+                        <input type="text" name="ctl_incoming_coils[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Weight (lbs)</label>
+                        <input type="text" name="ctl_incoming_weight[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Finished Pieces</label>
+                        <input type="text" name="ctl_finished_pieces[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Finished Weight</label>
+                        <input type="text" name="ctl_finished_weight[]" class="nmp-form-control">
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer Tags</label>
+                    <input type="text" name="ctl_customer_tags[]" class="nmp-form-control">
+                </div>
+            `;
+            group.appendChild(div);
+        }
+
+        function removeCtlJob(button) {
+            button.closest('.job-set').remove();
+        }
+
+        function addSlitJob() {
+            const group = document.getElementById("slit-group");
+            const div = document.createElement("div");
+            div.className = "job-set";
+            div.style.cssText = "background: #f8fafe; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--steel-gray);";
+            div.innerHTML = `
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Grade</label>
+                        <input type="text" name="slit_material_grade[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 2; min-width: 200px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Coil Description</label>
+                        <input type="text" name="slit_coil_description[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 0 0 auto; align-self: end;">
+                        <button type="button" onclick="removeSlitJob(this)" class="nmp-btn" style="background: #dc3545; margin-top: 27px;">Remove</button>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Coils</label>
+                        <input type="text" name="slit_incoming_coils[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Weight (lbs)</label>
+                        <input type="text" name="slit_incoming_weight[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">OD Size</label>
+                        <input type="text" name="slit_od_size[]" class="nmp-form-control">
+                    </div>
+                    <div style="flex: 1; min-width: 150px;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">PIW</label>
+                        <input type="text" name="slit_piw[]" class="nmp-form-control">
+                    </div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Slitter Setup</label>
+                    <input type="text" name="slit_setup[]" class="nmp-form-control">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer Tags</label>
+                    <input type="text" name="slit_customer_tags[]" class="nmp-form-control">
+                </div>
+            `;
+            group.appendChild(div);
+        }
+
+        function removeSlitJob(button) {
+            button.closest('.job-set').remove();
+        }
+
+        function toggleJobSections() {
+            const processType = document.querySelector('select[name="process_type"]').value;
+            const ctlSection = document.getElementById('ctl-section');
+            const slitSection = document.getElementById('slit-section');
+            
+            // Hide both sections initially
+            ctlSection.style.display = 'none';
+            slitSection.style.display = 'none';
+            
+            // Show appropriate sections based on selection
+            if (processType === 'cut_to_length') {
+                ctlSection.style.display = 'block';
+            } else if (processType === 'slitting') {
+                slitSection.style.display = 'block';
+            } else if (processType === 'both') {
+                ctlSection.style.display = 'block';
+                slitSection.style.display = 'block';
+            }
+        }
+
+        // Initialize sections on page load based on existing form data
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleJobSections();
+        });
+    </script>
+{% endblock %}

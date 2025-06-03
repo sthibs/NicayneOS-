@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice Dashboard - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    <div class="nmp-card">
+        <div class="nmp-card-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Invoice Dashboard – All Submitted Invoices</span>
+                <a href="/generate-invoice" class="nmp-btn" style="padding: 8px 16px; font-size: 0.9rem;">
+                    + Generate New Invoice
+                </a>
+            </div>
+        </div>
+        <div class="nmp-card-body">
+            <!-- Search and Filter Controls -->
+            <div style="margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: end;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Search Customer</label>
+                        <input type="text" id="searchCustomer" class="nmp-form-control" placeholder="Enter customer name...">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Search PO Number</label>
+                        <input type="text" id="searchPO" class="nmp-form-control" placeholder="Enter PO number...">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date Range</label>
+                        <select id="dateFilter" class="nmp-form-control">
+                            <option value="">All Dates</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="quarter">This Quarter</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button onclick="clearFilters()" class="nmp-btn" style="background: #6c757d; padding: 8px 16px;">
+                            Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div id="summaryStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+
+            <!-- Invoices Table -->
+            <div style="overflow-x: auto;">
+                <table id="invoicesTable" style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                    <thead style="background: var(--primary-blue); color: white;">
+                        <tr>
+                            <th class="sortable" data-column="date_generated" style="padding: 15px; text-align: left; cursor: pointer; user-select: none;">
+                                Invoice Date <span class="sort-arrow">↕</span>
+                            </th>
+                            <th class="sortable" data-column="customer_name" style="padding: 15px; text-align: left; cursor: pointer; user-select: none;">
+                                Customer <span class="sort-arrow">↕</span>
+                            </th>
+                            <th class="sortable" data-column="customer_po" style="padding: 15px; text-align: left; cursor: pointer; user-select: none;">
+                                PO Number <span class="sort-arrow">↕</span>
+                            </th>
+                            <th class="sortable" data-column="work_order_number" style="padding: 15px; text-align: left; cursor: pointer; user-select: none;">
+                                Work Order <span class="sort-arrow">↕</span>
+                            </th>
+                            <th class="sortable" data-column="total" style="padding: 15px; text-align: right; cursor: pointer; user-select: none;">
+                                Invoice Total <span class="sort-arrow">↕</span>
+                            </th>
+                            <th style="padding: 15px; text-align: center;">Status</th>
+                            <th style="padding: 15px; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoicesTableBody">
+                        <!-- Invoices will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 1.2rem; margin-bottom: 10px;">Loading invoices...</div>
+                <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-blue); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" style="display: none; text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 1.2rem; margin-bottom: 10px;">No invoices found</div>
+                <div style="margin-bottom: 20px;">No invoices match your current filters or none have been generated yet.</div>
+                <a href="/generate-invoice" class="nmp-btn">Generate Your First Invoice</a>
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" style="display: none; margin-top: 30px; text-align: center;">
+                <div style="display: inline-flex; gap: 10px; align-items: center;">
+                    <button onclick="changePage(-1)" class="nmp-btn" style="padding: 8px 12px;">Previous</button>
+                    <span id="pageInfo" style="padding: 0 20px; color: #666;"></span>
+                    <button onclick="changePage(1)" class="nmp-btn" style="padding: 8px 12px;">Next</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allInvoices = [];
+let filteredInvoices = [];
+let currentPage = 1;
+let itemsPerPage = 10;
+let currentSort = { column: 'date_generated', direction: 'desc' };
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadInvoices();
+    
+    // Set up search filters
+    document.getElementById('searchCustomer').addEventListener('input', filterInvoices);
+    document.getElementById('searchPO').addEventListener('input', filterInvoices);
+    document.getElementById('dateFilter').addEventListener('change', filterInvoices);
+    
+    // Set up sorting
+    document.querySelectorAll('.sortable').forEach(header => {
+        header.addEventListener('click', function() {
+            const column = this.getAttribute('data-column');
+            sortInvoices(column);
+        });
+    });
+});
+
+function loadInvoices() {
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('invoicesTable').style.display = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    
+    fetch('/api/invoices')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                allInvoices = data.invoices;
+                filteredInvoices = [...allInvoices];
+                updateSummaryStats();
+                sortInvoices(currentSort.column, currentSort.direction);
+                displayInvoices();
+            } else {
+                showError('Failed to load invoices: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error loading invoices:', error);
+            showError('Failed to load invoices. Please try again.');
+        })
+        .finally(() => {
+            document.getElementById('loadingState').style.display = 'none';
+        });
+}
+
+function updateSummaryStats() {
+    const totalInvoices = allInvoices.length;
+    const totalAmount = allInvoices.reduce((sum, invoice) => sum + (parseFloat(invoice.total) || 0), 0);
+    const thisMonthInvoices = allInvoices.filter(invoice => {
+        const invoiceDate = new Date(invoice.date_generated);
+        const now = new Date();
+        return invoiceDate.getMonth() === now.getMonth() && invoiceDate.getFullYear() === now.getFullYear();
+    }).length;
+    
+    const thisMonthTotal = allInvoices.filter(invoice => {
+        const invoiceDate = new Date(invoice.date_generated);
+        const now = new Date();
+        return invoiceDate.getMonth() === now.getMonth() && invoiceDate.getFullYear() === now.getFullYear();
+    }).reduce((sum, invoice) => sum + (parseFloat(invoice.total) || 0), 0);
+    
+    document.getElementById('summaryStats').innerHTML = `
+        <div style="padding: 20px; background: white; border-radius: 8px; border-left: 4px solid var(--primary-blue);">
+            <div style="font-size: 1.8rem; font-weight: bold; color: var(--primary-blue);">${totalInvoices}</div>
+            <div style="color: #666; font-size: 0.9rem;">Total Invoices</div>
+        </div>
+        <div style="padding: 20px; background: white; border-radius: 8px; border-left: 4px solid #28a745;">
+            <div style="font-size: 1.8rem; font-weight: bold; color: #28a745;">$${totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <div style="color: #666; font-size: 0.9rem;">Total Value</div>
+        </div>
+        <div style="padding: 20px; background: white; border-radius: 8px; border-left: 4px solid #17a2b8;">
+            <div style="font-size: 1.8rem; font-weight: bold; color: #17a2b8;">${thisMonthInvoices}</div>
+            <div style="color: #666; font-size: 0.9rem;">This Month</div>
+        </div>
+        <div style="padding: 20px; background: white; border-radius: 8px; border-left: 4px solid #ffc107;">
+            <div style="font-size: 1.8rem; font-weight: bold; color: #ffc107;">$${thisMonthTotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            <div style="color: #666; font-size: 0.9rem;">Month Value</div>
+        </div>
+    `;
+}
+
+function filterInvoices() {
+    const customerFilter = document.getElementById('searchCustomer').value.toLowerCase();
+    const poFilter = document.getElementById('searchPO').value.toLowerCase();
+    const dateFilter = document.getElementById('dateFilter').value;
+    
+    filteredInvoices = allInvoices.filter(invoice => {
+        // Customer filter
+        if (customerFilter && !invoice.customer_name.toLowerCase().includes(customerFilter)) {
+            return false;
+        }
+        
+        // PO filter
+        if (poFilter && !invoice.customer_po.toLowerCase().includes(poFilter)) {
+            return false;
+        }
+        
+        // Date filter
+        if (dateFilter) {
+            const invoiceDate = new Date(invoice.date_generated);
+            const now = new Date();
+            
+            switch (dateFilter) {
+                case 'today':
+                    if (invoiceDate.toDateString() !== now.toDateString()) return false;
+                    break;
+                case 'week':
+                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    if (invoiceDate < weekAgo) return false;
+                    break;
+                case 'month':
+                    if (invoiceDate.getMonth() !== now.getMonth() || invoiceDate.getFullYear() !== now.getFullYear()) return false;
+                    break;
+                case 'quarter':
+                    const quarter = Math.floor(now.getMonth() / 3);
+                    const invoiceQuarter = Math.floor(invoiceDate.getMonth() / 3);
+                    if (invoiceQuarter !== quarter || invoiceDate.getFullYear() !== now.getFullYear()) return false;
+                    break;
+            }
+        }
+        
+        return true;
+    });
+    
+    currentPage = 1;
+    displayInvoices();
+}
+
+function sortInvoices(column, direction = null) {
+    if (direction === null) {
+        // Toggle direction if same column, otherwise default to ascending
+        direction = (currentSort.column === column && currentSort.direction === 'asc') ? 'desc' : 'asc';
+    }
+    
+    currentSort = { column, direction };
+    
+    // Update sort arrows
+    document.querySelectorAll('.sort-arrow').forEach(arrow => arrow.textContent = '↕');
+    const activeHeader = document.querySelector(`[data-column="${column}"] .sort-arrow`);
+    if (activeHeader) {
+        activeHeader.textContent = direction === 'asc' ? '↑' : '↓';
+    }
+    
+    filteredInvoices.sort((a, b) => {
+        let aVal = a[column];
+        let bVal = b[column];
+        
+        // Handle different data types
+        if (column === 'total') {
+            aVal = parseFloat(aVal) || 0;
+            bVal = parseFloat(bVal) || 0;
+        } else if (column === 'date_generated') {
+            aVal = new Date(aVal);
+            bVal = new Date(bVal);
+        } else {
+            aVal = String(aVal).toLowerCase();
+            bVal = String(bVal).toLowerCase();
+        }
+        
+        if (aVal < bVal) return direction === 'asc' ? -1 : 1;
+        if (aVal > bVal) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    displayInvoices();
+}
+
+function displayInvoices() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const pageInvoices = filteredInvoices.slice(startIndex, endIndex);
+    
+    const tbody = document.getElementById('invoicesTableBody');
+    
+    if (filteredInvoices.length === 0) {
+        document.getElementById('invoicesTable').style.display = 'none';
+        document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('pagination').style.display = 'none';
+        return;
+    }
+    
+    document.getElementById('invoicesTable').style.display = 'table';
+    document.getElementById('emptyState').style.display = 'none';
+    
+    tbody.innerHTML = pageInvoices.map(invoice => {
+        const date = new Date(invoice.date_generated).toLocaleDateString();
+        const total = parseFloat(invoice.total || 0).toLocaleString('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        });
+        
+        return `
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 12px;">${date}</td>
+                <td style="padding: 12px; font-weight: 600;">${invoice.customer_name}</td>
+                <td style="padding: 12px; font-family: monospace;">${invoice.customer_po}</td>
+                <td style="padding: 12px; font-family: monospace;">${invoice.work_order_number}</td>
+                <td style="padding: 12px; text-align: right; font-weight: 600;">${total}</td>
+                <td style="padding: 12px; text-align: center;">
+                    <span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem;">
+                        Generated
+                    </span>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                    <div style="display: flex; gap: 8px; justify-content: center;">
+                        <button onclick="viewInvoice('${invoice.invoice_number}')" class="action-btn view-btn" title="View Invoice">
+                            👁️
+                        </button>
+                        <button onclick="downloadInvoice('${invoice.invoice_number}')" class="action-btn download-btn" title="Download PDF">
+                            💾
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+    
+    // Update pagination
+    updatePagination();
+}
+
+function updatePagination() {
+    const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+    const paginationDiv = document.getElementById('pagination');
+    
+    if (totalPages <= 1) {
+        paginationDiv.style.display = 'none';
+        return;
+    }
+    
+    paginationDiv.style.display = 'block';
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages} (${filteredInvoices.length} invoices)`;
+    
+    // Update button states
+    const prevBtn = paginationDiv.querySelector('button:first-child');
+    const nextBtn = paginationDiv.querySelector('button:last-child');
+    
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+}
+
+function changePage(direction) {
+    const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
+    const newPage = currentPage + direction;
+    
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        displayInvoices();
+    }
+}
+
+function clearFilters() {
+    document.getElementById('searchCustomer').value = '';
+    document.getElementById('searchPO').value = '';
+    document.getElementById('dateFilter').value = '';
+    filterInvoices();
+}
+
+function viewInvoice(invoiceNumber) {
+    window.open(`/download-invoice/${invoiceNumber}`, '_blank');
+}
+
+function downloadInvoice(invoiceNumber) {
+    const link = document.createElement('a');
+    link.href = `/download-invoice/${invoiceNumber}`;
+    link.download = true;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;
+        padding: 15px; border-radius: 8px; max-width: 400px;
+    `;
+    errorDiv.textContent = message;
+    document.body.appendChild(errorDiv);
+    
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.parentNode.removeChild(errorDiv);
+        }
+    }, 5000);
+}
+</script>
+
+<style>
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background: #f8f9fa;
+}
+
+.view-btn:hover {
+    background: #e3f2fd;
+}
+
+.download-btn:hover {
+    background: #e8f5e8;
+}
+
+.sortable:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sort-arrow {
+    font-size: 0.8rem;
+    margin-left: 5px;
+    opacity: 0.7;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,38 @@
+[
+  {
+    "bol_number": "BL734193",
+    "filename": "NMP-BOL-2025-05-31-BL734193.pdf",
+    "filepath": "pdf_outputs/NMP-BOL-2025-05-31-BL734193.pdf",
+    "work_order_number": "WO-20250531-200247",
+    "customer_name": "samuel",
+    "customer_po": "23456",
+    "total_bundles": 2,
+    "total_weight": 4675.75,
+    "date_generated": "2025-05-31T23:29:54.003393",
+    "finished_tags_count": 2
+  },
+  {
+    "bol_number": "BL785497",
+    "filename": "NMP-BOL-2025-06-01-BL785497.pdf",
+    "filepath": "pdf_outputs/NMP-BOL-2025-06-01-BL785497.pdf",
+    "work_order_number": "WO-20250531-200247",
+    "customer_name": "samuel",
+    "customer_po": "23456",
+    "total_bundles": 2,
+    "total_weight": 4675.75,
+    "date_generated": "2025-06-01T13:44:57.154052",
+    "finished_tags_count": 2
+  },
+  {
+    "bol_number": "BL789129",
+    "filename": "NMP-BOL-2025-06-01-BL789129.pdf",
+    "filepath": "pdf_outputs/NMP-BOL-2025-06-01-BL789129.pdf",
+    "work_order_number": "WO-20250601-143939",
+    "customer_name": "TEST CUSTOMER",
+    "customer_po": "TEST12345",
+    "total_bundles": 1,
+    "total_weight": 3000.0,
+    "date_generated": "2025-06-01T14:45:29.048121",
+    "finished_tags_count": 1
+  }
+]

@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Quotes & Purchase Orders - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    <div class="nmp-card">
+        <div class="nmp-card-header">Quotes & Purchase Orders</div>
+        <div class="nmp-card-body">
+            <p style="margin-bottom: 30px; color: #666; font-size: 1.1rem;">Upload, track, and manage customer quotes and official purchase orders</p>
+
+            <!-- Two Column Layout -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                
+                <!-- Upload Original PO Section -->
+                <div class="upload-section" id="poUploadSection">
+                    <div class="upload-section-header" style="background: var(--primary-blue); color: white; padding: 15px; border-radius: 8px 8px 0 0; margin-bottom: 0;">
+                        <h3 style="margin: 0; font-size: 1.2rem;">Upload Original PO</h3>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">Customer's official Purchase Orders</div>
+                    </div>
+                    <div class="upload-section-body" style="border: 1px solid var(--primary-blue); border-top: none; border-radius: 0 0 8px 8px; padding: 20px;">
+                        <form id="poUploadForm" enctype="multipart/form-data">
+                            <input type="hidden" name="upload_type" value="original_po">
+                            
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer Name</label>
+                                <select name="customer_name" class="nmp-form-control" required>
+                                    <option value="">Select Customer</option>
+                                    <option value="samuel">SAMUEL</option>
+                                    <option value="ACME STEEL">ACME STEEL</option>
+                                    <option value="MIDWEST METAL">MIDWEST METAL</option>
+                                    <option value="PRECISION PARTS">PRECISION PARTS</option>
+                                </select>
+                            </div>
+
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">PO Number</label>
+                                <input type="text" name="po_number" class="nmp-form-control" placeholder="e.g., 23456" required>
+                                <div style="font-size: 12px; color: #666; margin-top: 3px;">Enter the PO number (without PO# prefix)</div>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">PO File</label>
+                                <div class="file-drop-zone" style="border: 2px dashed #ccc; border-radius: 8px; padding: 40px; text-align: center; background: #f9f9f9; cursor: pointer; transition: all 0.3s ease;"
+                                     ondrop="handleFileDrop(event, 'poUploadForm')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" onclick="document.querySelector('#poUploadForm input[type=file]').click()">
+                                    <div style="font-size: 1.1rem; color: #666; margin-bottom: 10px;">Drop PO file here or click to browse</div>
+                                    <div style="font-size: 0.9rem; color: #999;">PDF files only</div>
+                                    <input type="file" name="file" accept=".pdf" required style="display: none;" onchange="updateFileName(this, 'poFileName')">
+                                </div>
+                                <div id="poFileName" style="margin-top: 10px; font-size: 0.9rem; color: #666;"></div>
+                            </div>
+
+                            <button type="submit" class="nmp-btn" style="width: 100%;">Upload Original PO</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Customer Quote Upload Section (Coming Soon) -->
+                <div class="upload-section" id="quoteUploadSection">
+                    <div class="upload-section-header" style="background: #6c757d; color: white; padding: 15px; border-radius: 8px 8px 0 0; margin-bottom: 0;">
+                        <h3 style="margin: 0; font-size: 1.2rem;">Customer Quote Upload</h3>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">Quote management system</div>
+                    </div>
+                    <div class="upload-section-body" style="border: 1px solid #6c757d; border-top: none; border-radius: 0 0 8px 8px; padding: 20px; background: #f8f9fa;">
+                        <div style="text-align: center; padding: 40px 20px;">
+                            <div style="font-size: 3rem; color: #6c757d; margin-bottom: 15px;">📋</div>
+                            <h4 style="color: #6c757d; margin-bottom: 10px;">Feature Coming Soon</h4>
+                            <p style="color: #6c757d; margin-bottom: 20px;">Quote upload and tracking functionality will be available in the next update.</p>
+                            <button class="nmp-btn" style="background: #6c757d; border-color: #6c757d; cursor: not-allowed;" disabled>
+                                Upload Quote (Coming Soon)
+                            </button>
+                        </div>
+                        
+                        <!-- Future Quote Features Preview -->
+                        <div style="margin-top: 30px; padding: 15px; background: #e9ecef; border-radius: 6px; border-left: 4px solid #6c757d;">
+                            <h5 style="color: #495057; margin-bottom: 10px;">Planned Features:</h5>
+                            <ul style="color: #6c757d; margin: 0; padding-left: 20px;">
+                                <li>Upload customer quote documents</li>
+                                <li>Track quote numbers and status</li>
+                                <li>Link quotes to purchase orders</li>
+                                <li>Quote history and search</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Messages -->
+            <div id="uploadStatus" style="display: none; margin: 30px 0 20px; padding: 15px; border-radius: 8px;"></div>
+
+            <!-- Recent PO Uploads -->
+            <div id="recentUploads" style="margin-top: 40px;">
+                <h3 style="color: var(--primary-blue); margin-bottom: 15px;">Recent PO Uploads</h3>
+                <div id="recentUploadsList" style="background: white; border: 1px solid #ddd; border-radius: 8px; min-height: 100px; padding: 20px;">
+                    <div style="text-align: center; color: #666;">Loading recent uploads...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    setupFormHandlers();
+    loadRecentUploads();
+});
+
+function setupFormHandlers() {
+    // PO Upload Form
+    document.getElementById('poUploadForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        uploadDocument(this, 'original_po');
+    });
+}
+
+function uploadDocument(form, uploadType) {
+    const formData = new FormData(form);
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    
+    // Validate form
+    const customerName = formData.get('customer_name');
+    const file = formData.get('file');
+    
+    if (!customerName || !file) {
+        showStatus('Please fill in all required fields', 'error');
+        return;
+    }
+
+    // Check file type
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+        showStatus('Please select a PDF file', 'error');
+        return;
+    }
+
+    // Show uploading state
+    submitButton.textContent = 'Uploading...';
+    submitButton.disabled = true;
+    showStatus('Uploading file...', 'info');
+
+    // Submit to server
+    fetch('/quotes-pos', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus(data.message, 'success');
+            if (data.drive_link) {
+                showStatus(data.message + ` <a href="${data.drive_link}" target="_blank" style="color: var(--primary-blue);">View in Drive</a>`, 'success');
+            }
+            form.reset();
+            updateFileName(null, 'poFileName');
+            loadRecentUploads();
+        } else {
+            showStatus(`Upload failed: ${data.error}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Upload error:', error);
+        showStatus('Upload failed. Please try again.', 'error');
+    })
+    .finally(() => {
+        submitButton.textContent = originalText;
+        submitButton.disabled = false;
+    });
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.currentTarget.style.borderColor = 'var(--primary-blue)';
+    e.currentTarget.style.backgroundColor = '#f0f8ff';
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.currentTarget.style.borderColor = '#ccc';
+    e.currentTarget.style.backgroundColor = '#f9f9f9';
+}
+
+function handleFileDrop(e, formId) {
+    e.preventDefault();
+    const dropZone = e.currentTarget;
+    dropZone.style.borderColor = '#ccc';
+    dropZone.style.backgroundColor = '#f9f9f9';
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const fileInput = document.querySelector(`#${formId} input[type="file"]`);
+        fileInput.files = files;
+        updateFileName(fileInput, 'poFileName');
+    }
+}
+
+function updateFileName(input, targetId) {
+    const fileNameDiv = document.getElementById(targetId);
+    if (!input || !input.files || input.files.length === 0) {
+        fileNameDiv.textContent = '';
+        return;
+    }
+    
+    const file = input.files[0];
+    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+    fileNameDiv.innerHTML = `<strong>Selected:</strong> ${file.name} (${fileSize} MB)`;
+}
+
+function showStatus(message, type) {
+    const statusDiv = document.getElementById('uploadStatus');
+    statusDiv.innerHTML = message;
+    statusDiv.className = type === 'success' ? 'alert-success' : 
+                         type === 'error' ? 'alert-error' : 'alert-info';
+    statusDiv.style.display = 'block';
+    
+    // Auto-hide info messages after 5 seconds
+    if (type === 'info') {
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 5000);
+    }
+}
+
+function loadRecentUploads() {
+    fetch('/api/po-uploads')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('recentUploadsList');
+            
+            if (data.success && data.uploads.length > 0) {
+                container.innerHTML = '';
+                
+                const table = document.createElement('table');
+                table.style.width = '100%';
+                table.style.borderCollapse = 'collapse';
+                
+                table.innerHTML = `
+                    <thead style="background: #f8f9fa;">
+                        <tr>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Date</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Customer</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">PO Number</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Status</th>
+                        </tr>
+                    </thead>
+                `;
+                
+                const tbody = document.createElement('tbody');
+                data.uploads.slice(0, 10).forEach(upload => {
+                    const row = document.createElement('tr');
+                    row.style.borderBottom = '1px solid #eee';
+                    
+                    const date = new Date(upload.timestamp).toLocaleDateString();
+                    
+                    row.innerHTML = `
+                        <td style="padding: 10px;">${date}</td>
+                        <td style="padding: 10px;">${upload.customer_name}</td>
+                        <td style="padding: 10px; font-family: monospace;">${upload.document_number}</td>
+                        <td style="padding: 10px;">
+                            <span style="background: #d4edda; color: #155724; padding: 2px 8px; border-radius: 12px; font-size: 12px;">
+                                Uploaded
+                            </span>
+                        </td>
+                    `;
+                    
+                    tbody.appendChild(row);
+                });
+                
+                table.appendChild(tbody);
+                container.appendChild(table);
+            } else {
+                container.innerHTML = '<div style="text-align: center; color: #666;">No recent PO uploads found</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading recent uploads:', error);
+            document.getElementById('recentUploadsList').innerHTML = '<div style="text-align: center; color: #666;">Error loading uploads</div>';
+        });
+}
+</script>
+
+<style>
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+.file-drop-zone:hover {
+    border-color: var(--primary-blue) !important;
+    background-color: #f0f8ff !important;
+}
+
+.upload-section {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+</style>
+{% endblock %}

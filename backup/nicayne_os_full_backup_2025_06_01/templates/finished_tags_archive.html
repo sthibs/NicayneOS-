@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Finished Tags Archive - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+    <div class="nmp-card">
+        <div class="nmp-card-header">Finished Tags Archive</div>
+        <div class="nmp-card-body">
+            <p style="margin-bottom: 30px; color: #666; font-size: 1.1rem;">Manufacturing Completion Records</p>
+
+            <!-- Statistics Section -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; border: 1px solid var(--steel-gray); text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary-blue);">{{ tags|length }}</div>
+                    <div style="color: #666;">Total Tags</div>
+                </div>
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; border: 1px solid var(--steel-gray); text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary-blue);">{{ unique_customers|length }}</div>
+                    <div style="color: #666;">Unique Customers</div>
+                </div>
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; border: 1px solid var(--steel-gray); text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary-blue);">{{ "{:,.0f}".format(total_weight) }}</div>
+                    <div style="color: #666;">Total Weight (lbs)</div>
+                </div>
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; border: 1px solid var(--steel-gray); text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--primary-blue);">{{ total_pieces }}</div>
+                    <div style="color: #666;">Total Pieces</div>
+                </div>
+            </div>
+
+            <!-- Search and Filter Controls -->
+            <div style="background: #f8fafe; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--steel-gray);">
+                <h3 style="color: var(--primary-blue); margin-bottom: 15px;">Search & Filter</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Search Tags</label>
+                        <input type="text" id="searchInput" placeholder="Search by tag ID, customer, work order..." class="nmp-form-control">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer Filter</label>
+                        <select id="customerFilter" class="nmp-form-control">
+                            <option value="">All Customers</option>
+                            {% for customer in unique_customers %}
+                                <option value="{{ customer }}">{{ customer }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date Range</label>
+                        <input type="date" id="dateFrom" class="nmp-form-control" style="margin-bottom: 5px;">
+                        <input type="date" id="dateTo" class="nmp-form-control">
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button onclick="applyFilters()" class="nmp-btn nmp-btn-secondary">Apply Filters</button>
+                    <button onclick="clearFilters()" class="nmp-btn nmp-btn-secondary">Clear Filters</button>
+                    <button onclick="exportData()" class="nmp-btn nmp-btn-secondary">Export Data</button>
+                </div>
+            </div>
+
+            <!-- Tags Table -->
+            {% if tags %}
+                <div style="overflow-x: auto;">
+                    <table id="tagsTable" style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <thead style="background: var(--primary-blue); color: white;">
+                            <tr>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid white;">Tag ID</th>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid white;">Date</th>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid white;">Customer</th>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid white;">Work Order</th>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid white;">Material</th>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid white;">Pieces</th>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid white;">Weight</th>
+                                <th style="padding: 15px; text-align: left; border-bottom: 2px solid white;">Operator</th>
+                                <th style="padding: 15px; text-align: center; border-bottom: 2px solid white;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tag in tags %}
+                                <tr style="border-bottom: 1px solid #eee;" data-customer="{{ tag.customer_name }}" data-date="{{ tag.date }}" data-search-text="{{ (tag.tag_id + ' ' + tag.customer_name + ' ' + tag.work_order_number + ' ' + tag.material_grade)|lower }}">
+                                    <td style="padding: 12px; font-family: monospace; font-weight: bold; color: var(--primary-blue);">{{ tag.tag_id }}</td>
+                                    <td style="padding: 12px;">{{ tag.date }}</td>
+                                    <td style="padding: 12px;">{{ tag.customer_name }}</td>
+                                    <td style="padding: 12px;">{{ tag.work_order_number }}</td>
+                                    <td style="padding: 12px;">{{ tag.material_grade }}</td>
+                                    <td style="padding: 12px;">{{ tag.pieces_or_coils }}</td>
+                                    <td style="padding: 12px;">{{ tag.finished_weight }} lbs</td>
+                                    <td style="padding: 12px;">{{ tag.operator_initials }}</td>
+                                    <td style="padding: 12px; text-align: center;">
+                                        <div style="display: flex; gap: 5px; justify-content: center;">
+                                            <a href="/regenerate-finished-tag/{{ tag.tag_id }}" class="nmp-btn nmp-btn-secondary" style="padding: 5px 10px; font-size: 12px;">PDF</a>
+                                            <a href="/finished-tag?duplicate={{ tag.tag_id }}" class="nmp-btn nmp-btn-secondary" style="padding: 5px 10px; font-size: 12px;">Duplicate</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <div style="font-size: 1.2rem; margin-bottom: 10px;">No finished tags found</div>
+                    <div>Start by creating your first finished tag</div>
+                </div>
+            {% endif %}
+
+            <!-- Action Buttons -->
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--steel-gray);">
+                <a href="/finished-tag" class="nmp-btn">Create New Finished Tag</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const customerFilter = document.getElementById('customerFilter').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+            
+            const rows = document.querySelectorAll('#tagsTable tbody tr');
+            
+            rows.forEach(row => {
+                let showRow = true;
+                
+                // Search term filter
+                if (searchTerm && !row.dataset.searchText.includes(searchTerm)) {
+                    showRow = false;
+                }
+                
+                // Customer filter
+                if (customerFilter && row.dataset.customer !== customerFilter) {
+                    showRow = false;
+                }
+                
+                // Date range filter
+                if (dateFrom || dateTo) {
+                    const rowDate = row.dataset.date;
+                    if (dateFrom && rowDate < dateFrom) showRow = false;
+                    if (dateTo && rowDate > dateTo) showRow = false;
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+            });
+        }
+        
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('customerFilter').value = '';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            
+            const rows = document.querySelectorAll('#tagsTable tbody tr');
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+        }
+        
+        function exportData() {
+            // Simple CSV export of visible data
+            const table = document.getElementById('tagsTable');
+            const rows = Array.from(table.querySelectorAll('tbody tr:not([style*="display: none"])'));
+            
+            let csv = 'Tag ID,Date,Customer,Work Order,Material,Pieces,Weight,Operator\n';
+            
+            rows.forEach(row => {
+                const cells = Array.from(row.querySelectorAll('td:not(:last-child)'));
+                const rowData = cells.map(cell => cell.textContent.trim()).join(',');
+                csv += rowData + '\n';
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'finished_tags_export.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        // Real-time search
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('customerFilter').addEventListener('change', applyFilters);
+    </script>
+{% endblock %}

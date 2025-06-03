@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Print Work Order</title>
+    <style>
+        @media print {
+            @page { margin: 0.5in; }
+            .no-print { display: none; }
+        }
+        
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            line-height: 1.4;
+            max-width: 8.5in;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #333;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            min-width: 120px;
+            color: #555;
+        }
+        
+        .info-value {
+            flex: 1;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        .notes {
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #f9f9f9;
+            min-height: 80px;
+            white-space: pre-wrap;
+        }
+        
+        .coil-tags {
+            background-color: #f0f8ff;
+            padding: 10px;
+            border-left: 4px solid #007bff;
+            margin-top: 10px;
+        }
+        
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 5px;
+        }
+        
+        .tag {
+            background-color: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .print-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button no-print" onclick="window.print()">🖨️ Print</button>
+    
+    <div class="header">
+        <h1>Nicayne Work Order</h1>
+        <div style="font-size: 14px; color: #666; margin-top: 5px;">
+            Generated on {{ current_time }}
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Work Order Information</div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Work Order #:</span>
+                <span class="info-value">{{ data.work_order_number or 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Date Created:</span>
+                <span class="info-value">{{ data.date or 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Customer:</span>
+                <span class="info-value">{{ data.customer_name or 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Date Required:</span>
+                <span class="info-value">{{ data.date_required or 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Customer PO:</span>
+                <span class="info-value">{{ data.customer_po or 'N/A' }}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Quote Number:</span>
+                <span class="info-value">{{ data.quote_number or 'N/A' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Bundle & Skid Specifications</div>
+        <table>
+            <tr>
+                <th>Max Skid Weight</th>
+                <th>Pieces per Skid</th>
+                <th>Max OD</th>
+                <th>Coil Direction</th>
+            </tr>
+            <tr>
+                <td>{{ data.max_skid_weight or 'N/A' }}</td>
+                <td>{{ data.pieces_per_skid or 'N/A' }}</td>
+                <td>{{ data.max_od or 'N/A' }}</td>
+                <td>{{ data.coil_direction or 'N/A' }}</td>
+            </tr>
+        </table>
+        
+        <table style="margin-top: 10px;">
+            <tr>
+                <th>Wood Spacers</th>
+                <th>Paper Wrapped</th>
+                <th>Split Coil</th>
+            </tr>
+            <tr>
+                <td>{{ "Yes" if data.wood_spacers else "No" }}</td>
+                <td>{{ "Yes" if data.paper_wrapped else "No" }}</td>
+                <td>{{ "Yes" if data.split_coil else "No" }}</td>
+            </tr>
+        </table>
+    </div>
+
+    {% if data.customer_tags %}
+    <div class="section">
+        <div class="section-title">Customer Tags</div>
+        <div class="coil-tags">
+            <strong>Tags to Process:</strong>
+            <div class="tag-list">
+                {% for tag in data.customer_tags.split(',') %}
+                    <span class="tag">{{ tag.strip() }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="section">
+        <div class="section-title">Special Instructions & Notes</div>
+        <div class="notes">{{ data.notes or 'No special instructions provided.' }}</div>
+    </div>
+
+    <script>
+        // Auto-print when loaded (can be disabled if needed)
+        // window.onload = function() { window.print(); };
+    </script>
+</body>
+</html>

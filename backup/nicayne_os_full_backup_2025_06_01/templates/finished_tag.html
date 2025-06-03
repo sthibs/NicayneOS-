@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Finished Tags - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+    <div class="nmp-card">
+        <div class="nmp-card-header">Finished Tag Entry</div>
+        <div class="nmp-card-body">
+            <p style="margin-bottom: 30px; color: #666; font-size: 1.1rem;">Manufacturing Completion Tracking System</p>
+
+            {% if request.args.get('success') %}
+                <div style="padding: 15px; margin-bottom: 20px; background: #d4edda; border: 1px solid #c3e6cb; color: #155724; border-radius: 8px;">
+                    Finished tag created successfully! PDF generated and archived.
+                </div>
+            {% endif %}
+
+            <form method="POST" action="/finished-tag">
+                <!-- Tag Information -->
+                <div class="nmp-form-group">
+                    <label class="nmp-form-label">Tag Information</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tag ID</label>
+                            <input type="text" name="tag_id" value="{{ form_data.tag_id if form_data else tag_id }}" class="nmp-form-control" readonly style="background: #f5f5f5;">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date</label>
+                            <input type="date" name="date" value="{{ form_data.date if form_data else today }}" class="nmp-form-control" required>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Operator Initials</label>
+                            <input type="text" name="operator_initials" value="{{ form_data.operator_initials if form_data else '' }}" class="nmp-form-control" required maxlength="3" style="text-transform: uppercase;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Work Order Information -->
+                <div class="nmp-form-group">
+                    <label class="nmp-form-label">Work Order Information</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Work Order Number</label>
+                            <input type="text" name="work_order_number" value="{{ form_data.work_order_number if form_data else '' }}" class="nmp-form-control" required>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer Name</label>
+                            <input type="text" name="customer_name" value="{{ form_data.customer_name if form_data else '' }}" class="nmp-form-control" required>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer PO</label>
+                            <input type="text" name="customer_po" value="{{ form_data.customer_po if form_data else '' }}" class="nmp-form-control">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Material Information -->
+                <div class="nmp-form-group">
+                    <label class="nmp-form-label">Material Information</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Grade</label>
+                            <input type="text" name="material_grade" value="{{ form_data.material_grade if form_data else '' }}" class="nmp-form-control" required>
+                        </div>
+                        <div style="grid-column: span 2;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Description</label>
+                            <input type="text" name="material_description" value="{{ form_data.material_description if form_data else '' }}" class="nmp-form-control" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Production Information -->
+                <div class="nmp-form-group">
+                    <label class="nmp-form-label">Production Information</label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Pieces/Coils</label>
+                            <input type="number" name="pieces_or_coils" value="{{ form_data.pieces_or_coils if form_data else '' }}" class="nmp-form-control" required min="1">
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Finished Weight (lbs)</label>
+                            <input type="number" name="finished_weight" value="{{ form_data.finished_weight if form_data else '' }}" class="nmp-form-control" step="0.01" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tag Numbers -->
+                <div class="nmp-form-group">
+                    <label class="nmp-form-label">Tag Numbers</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Tags (Comma Separated)</label>
+                            <textarea name="incoming_tags" rows="3" class="nmp-form-control" placeholder="Enter incoming tag numbers separated by commas">{{ form_data.incoming_tags if form_data else '' }}</textarea>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Heat Numbers (Comma Separated)</label>
+                            <textarea name="heat_numbers" rows="3" class="nmp-form-control" placeholder="Enter heat numbers separated by commas">{{ form_data.heat_numbers if form_data else '' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Lookup Tools -->
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--steel-gray);">
+                    <h3 style="color: var(--primary-blue); margin-bottom: 15px;">Quick Lookup Tools</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Work Order Lookup</label>
+                            <input type="text" id="workorder-lookup" placeholder="Enter work order number" class="nmp-form-control">
+                            <button type="button" onclick="lookupWorkOrder()" class="nmp-btn nmp-btn-secondary" style="margin-top: 10px; width: 100%;">Lookup Work Order</button>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer PO Lookup</label>
+                            <input type="text" id="customerpo-lookup" placeholder="Enter customer PO" class="nmp-form-control">
+                            <button type="button" onclick="lookupCustomerPO()" class="nmp-btn nmp-btn-secondary" style="margin-top: 10px; width: 100%;">Lookup Customer PO</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" class="nmp-btn">Create Finished Tag</button>
+                </div>
+            </form>
+
+            <!-- Archive Link -->
+            <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--steel-gray);">
+                <a href="/finished-tags" class="nmp-btn nmp-btn-secondary">View Finished Tags Archive</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function lookupWorkOrder() {
+            const workOrder = document.getElementById('workorder-lookup').value;
+            if (workOrder) {
+                window.location.href = `/finished-tag?work_order=${encodeURIComponent(workOrder)}`;
+            }
+        }
+
+        function lookupCustomerPO() {
+            const customerPO = document.getElementById('customerpo-lookup').value;
+            if (customerPO) {
+                window.location.href = `/finished-tag?customer_po=${encodeURIComponent(customerPO)}`;
+            }
+        }
+
+        // Auto-uppercase operator initials
+        document.querySelector('input[name="operator_initials"]').addEventListener('input', function(e) {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    </script>
+{% endblock %}

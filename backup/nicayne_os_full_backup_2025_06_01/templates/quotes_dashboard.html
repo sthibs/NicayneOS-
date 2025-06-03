@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block title %}Quotes Dashboard - Nicayne Metal Processing{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Page Header -->
+            <div style="background: linear-gradient(135deg, #005baa, #0080d4); color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 style="margin: 0; font-size: 2.5rem; font-weight: bold;">Quotes Dashboard</h1>
+                        <p style="margin: 10px 0 0 0; font-size: 1.1rem; opacity: 0.9;">Unified quote system with lifecycle tracking</p>
+                    </div>
+                    <div class="btn-group" role="group">
+                        <a href="/quotes" class="nmp-btn" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">Dashboard</a>
+                        <a href="/quotes/form" class="nmp-btn" style="background: #28a745; border: 1px solid #28a745;">Create Quote</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Dashboard -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div class="stat-card" style="background: linear-gradient(135deg, #28a745, #34ce57); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold;" id="activeQuotes">0</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Active Quotes</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #dc3545, #e55a6b); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold;" id="realizedQuotes">0</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Realized Quotes</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #6c757d, #868e96); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold;" id="inactiveQuotes">0</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Inactive Quotes</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #005baa, #0080d4); color: white; padding: 20px; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 2rem; font-weight: bold;" id="totalQuoteValue">$0</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">Total Value</div>
+                </div>
+            </div>
+
+            <!-- AI Quote Extraction Tools -->
+            <div style="background: white; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 30px; overflow: hidden;">
+                <div style="background: #005baa; color: white; padding: 15px 20px; font-weight: bold; font-size: 1.1rem;">
+                    AI Quote Extraction
+                </div>
+                <div style="padding: 30px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                        <!-- Text Extraction -->
+                        <div>
+                            <h5 style="color: #005baa; margin-bottom: 15px;">Extract from Email/Text</h5>
+                            <textarea id="extractText" placeholder="Paste email content or quote request text here..." 
+                                style="width: 100%; height: 150px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"></textarea>
+                            <button type="button" onclick="extractFromText()" class="nmp-btn" style="margin-top: 10px; width: 100%;">
+                                Extract Quote Information
+                            </button>
+                        </div>
+                        
+                        <!-- File Upload -->
+                        <div>
+                            <h5 style="color: #005baa; margin-bottom: 15px;">Extract from File</h5>
+                            <div style="border: 2px dashed #ddd; border-radius: 5px; padding: 40px; text-align: center; background: #f8f9fa;">
+                                <input type="file" id="extractFile" accept=".pdf,.doc,.docx,.txt,.jpg,.png" style="display: none;" onchange="handleFileUpload(this)">
+                                <label for="extractFile" style="cursor: pointer; color: #005baa; font-weight: 600;">
+                                    Click to upload file or drag and drop
+                                </label>
+                                <div style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                                    Supports PDF, Word, Text, and Image files
+                                </div>
+                            </div>
+                            <button type="button" onclick="extractFromFile()" class="nmp-btn" style="margin-top: 10px; width: 100%;" disabled id="extractFileBtn">
+                                Extract Quote Information
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Quotes Table -->
+            <div style="background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                <div style="background: #005baa; color: white; padding: 15px 20px; font-weight: bold; font-size: 1.1rem;">
+                    Recent Quotes
+                </div>
+                <div style="padding: 0;">
+                    <table class="table table-striped" style="margin: 0;">
+                        <thead style="background: #f8f9fa;">
+                            <tr>
+                                <th>Quote #</th>
+                                <th>Customer</th>
+                                <th>Date Created</th>
+                                <th>Date Required</th>
+                                <th>Process Type</th>
+                                <th>Status</th>
+                                <th>Value</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quotesTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
+                                    No quotes found. <a href="/quotes/form" style="color: #005baa;">Create your first quote</a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadQuotes();
+});
+
+async function loadQuotes() {
+    try {
+        const response = await fetch('/api/get-quotes');
+        const data = await response.json();
+        
+        if (data.success) {
+            updateStatistics(data.quotes);
+            updateQuotesTable(data.quotes);
+        }
+    } catch (error) {
+        console.error('Error loading quotes:', error);
+    }
+}
+
+function updateStatistics(quotes) {
+    const stats = {
+        active: quotes.filter(q => q.status === 'Active').length,
+        realized: quotes.filter(q => q.status === 'Realized').length,
+        inactive: quotes.filter(q => q.status === 'Inactive').length,
+        totalValue: quotes.reduce((sum, q) => sum + (parseFloat(q.unit_price) || 0), 0)
+    };
+    
+    document.getElementById('activeQuotes').textContent = stats.active;
+    document.getElementById('realizedQuotes').textContent = stats.realized;
+    document.getElementById('inactiveQuotes').textContent = stats.inactive;
+    document.getElementById('totalQuoteValue').textContent = `$${stats.totalValue.toFixed(2)}`;
+}
+
+function updateQuotesTable(quotes) {
+    const tbody = document.getElementById('quotesTableBody');
+    
+    if (quotes.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: #666;">
+                    No quotes found. <a href="/quotes/form" style="color: #005baa;">Create your first quote</a>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = quotes.map(quote => `
+        <tr>
+            <td><strong>${quote.quote_number}</strong></td>
+            <td>${quote.customer_name}</td>
+            <td>${new Date(quote.date_created).toLocaleDateString()}</td>
+            <td>${new Date(quote.date_required).toLocaleDateString()}</td>
+            <td>${quote.process_type}</td>
+            <td>
+                <span class="badge" style="background: ${getStatusColor(quote.status)}; color: white; padding: 5px 10px; border-radius: 15px;">
+                    ${quote.status}
+                </span>
+            </td>
+            <td>$${(parseFloat(quote.unit_price) || 0).toFixed(2)}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="viewQuote('${quote.quote_number}')">View</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="editQuote('${quote.quote_number}')">Edit</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function getStatusColor(status) {
+    switch (status) {
+        case 'Active': return '#28a745';
+        case 'Realized': return '#dc3545';
+        case 'Inactive': return '#6c757d';
+        default: return '#005baa';
+    }
+}
+
+function handleFileUpload(input) {
+    const button = document.getElementById('extractFileBtn');
+    button.disabled = !input.files.length;
+    button.textContent = input.files.length ? `Extract from ${input.files[0].name}` : 'Extract Quote Information';
+}
+
+async function extractFromText() {
+    const text = document.getElementById('extractText').value.trim();
+    if (!text) {
+        alert('Please enter text to extract from');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/extract-quote-from-text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            // Redirect to form with pre-filled data
+            const params = new URLSearchParams(result.data);
+            window.location.href = `/quotes/form?${params}`;
+        } else {
+            alert('Error extracting quote information: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error processing request');
+    }
+}
+
+async function extractFromFile() {
+    const fileInput = document.getElementById('extractFile');
+    if (!fileInput.files.length) {
+        alert('Please select a file');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    
+    try {
+        const response = await fetch('/extract-quote-from-file', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            // Redirect to form with pre-filled data
+            const params = new URLSearchParams(result.data);
+            window.location.href = `/quotes/form?${params}`;
+        } else {
+            alert('Error extracting quote information: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error processing file');
+    }
+}
+
+function viewQuote(quoteNumber) {
+    // TODO: Implement quote viewing
+    alert(`View quote ${quoteNumber} - Feature coming soon`);
+}
+
+function editQuote(quoteNumber) {
+    // TODO: Implement quote editing
+    alert(`Edit quote ${quoteNumber} - Feature coming soon`);
+}
+</script>
+{% endblock %}

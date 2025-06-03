@@ -1,0 +1,6 @@
+{
+  "max_pages": 100,
+  "enable_backup": true,
+  "processing_timeout": 300,
+  "batch_size": 100
+}

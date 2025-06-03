@@ -1,0 +1,909 @@
+{% extends "base.html" %}
+
+{% block title %}Quote Generator - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+    <!-- Header -->
+    <div class="nmp-card" style="margin-bottom: 20px;">
+        <div class="nmp-card-header">Quote Generator</div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="display: grid; grid-template-columns: 500px 1fr; gap: 20px;">
+        <!-- Left Panel: Extracted Quote Information -->
+        <div class="nmp-card">
+            <div class="nmp-card-header" style="background: var(--primary-blue); color: white;">
+                Extracted Quote Information
+            </div>
+            <div class="nmp-card-body" id="extractedInfo">
+                <!-- AI Extraction Options -->
+                <div style="margin-bottom: 25px;">
+                    <!-- Email Text Extraction -->
+                    <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
+                        <div style="font-weight: 600; margin-bottom: 10px; color: var(--primary-blue);">Extract from Email Text</div>
+                        <textarea id="emailTextInput" 
+                                  placeholder="Paste quote email or text here..." 
+                                  style="width: 100%; height: 120px; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 0.9rem; resize: vertical;"
+                        ></textarea>
+                        <button id="extractEmailBtn" class="nmp-btn" style="padding: 8px 16px; margin-top: 10px; font-size: 0.9rem;">
+                            Extract from Text
+                        </button>
+                    </div>
+                    
+                    <!-- File Upload Section -->
+                    <div style="padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f9f9f9;">
+                        <div style="font-weight: 600; margin-bottom: 10px; color: var(--primary-blue);">Extract from Document</div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <input type="file" id="quoteFileInput" accept=".pdf,.jpg,.jpeg,.png" style="flex: 1;">
+                            <button id="extractFileBtn" class="nmp-btn" style="padding: 8px 16px; font-size: 0.9rem;">
+                                Extract from File
+                            </button>
+                        </div>
+                        <div style="color: #666; font-size: 0.85rem; margin-top: 8px;">Supports PDF, JPG, and PNG formats</div>
+                    </div>
+                </div>
+
+                <!-- Extracted Information Display -->
+                <div id="extractedContent" style="display: none;">
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--primary-blue);">Customer PO:</strong>
+                        <div id="extractedPO" style="font-size: 1.1rem; margin-top: 5px;">-</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--primary-blue);">Material:</strong>
+                        <div id="extractedMaterial" style="font-size: 1.1rem; margin-top: 5px;">-</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--primary-blue);">Process:</strong>
+                        <div id="extractedProcess" style="font-size: 1.1rem; margin-top: 5px;">-</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--primary-blue);">Thickness:</strong>
+                        <div id="extractedThickness" style="font-size: 1.1rem; margin-top: 5px;">-</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--primary-blue);">Width:</strong>
+                        <div id="extractedWidth" style="font-size: 1.1rem; margin-top: 5px;">-</div>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <strong style="color: var(--primary-blue);">Weight:</strong>
+                        <div id="extractedWeight" style="font-size: 1.1rem; margin-top: 5px;">-</div>
+                    </div>
+                    
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+                    
+                    <!-- Calculated Values -->
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                        <div style="margin-bottom: 10px;">
+                            <strong style="color: var(--primary-blue);">OD Size [lbs]:</strong>
+                            <div id="calculatedOD" style="font-size: 1.2rem; font-weight: bold; margin-top: 5px;">-</div>
+                        </div>
+                        
+                        <div>
+                            <strong style="color: var(--primary-blue);">PIW [lbs/s]:</strong>
+                            <div id="calculatedPIW" style="font-size: 1.2rem; font-weight: bold; margin-top: 5px;">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Quote Form -->
+        <div class="nmp-card">
+            <div class="nmp-card-header">Quote Form</div>
+            <div class="nmp-card-body">
+                <form id="quoteForm">
+                    <!-- General Job Information -->
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin-bottom: 15px; color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 5px;">General Job Information</h3>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Quote Number</label>
+                                <input type="text" id="quoteNumber" class="nmp-form-control" readonly style="background: #f5f5f5;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Customer Name</label>
+                                <input type="text" id="customerName" class="nmp-form-control" required placeholder="Enter customer name">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Date Required</label>
+                                <input type="date" id="dateRequired" class="nmp-form-control" required>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Date Created</label>
+                                <input type="date" id="dateCreated" class="nmp-form-control" readonly style="background: #f5f5f5;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Process Type</label>
+                                <select id="processType" class="nmp-form-control" required>
+                                    <option value="">Select Process Type</option>
+                                    <option value="Slitting">Slitting</option>
+                                    <option value="Cut-to-Length">Cut-to-Length</option>
+                                    <option value="Both">Both</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600;">Packaging Instructions / Customer Request</label>
+                            <textarea id="packagingInstructions" class="nmp-form-control" rows="3" placeholder="Enter packaging requirements or special customer requests"></textarea>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Max Bundle/Skid Weight</label>
+                                <input type="text" id="maxSkidWeight" class="nmp-form-control" placeholder="e.g. 5000 lbs">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Requested Pieces Per Skid</label>
+                                <input type="text" id="piecesPerSkid" class="nmp-form-control" placeholder="e.g. 10">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Max OD</label>
+                                <input type="text" id="maxOd" class="nmp-form-control" placeholder="e.g. 72 inches">
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="woodSpacers" style="margin: 0;">
+                                <label for="woodSpacers" style="margin: 0; font-weight: 600;">Wood Spacers</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="paperWrapped" style="margin: 0;">
+                                <label for="paperWrapped" style="margin: 0; font-weight: 600;">Paper Wrapped</label>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="edgeProtectors" style="margin: 0;">
+                                <label for="edgeProtectors" style="margin: 0; font-weight: 600;">Edge Protectors</label>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Coil Direction on Skid</label>
+                                <div style="display: flex; gap: 20px;">
+                                    <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                                        <input type="radio" name="coilDirection" value="CW">
+                                        CW
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 5px; font-weight: normal;">
+                                        <input type="radio" name="coilDirection" value="CCW">
+                                        CCW
+                                    </label>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="splitCoil" style="margin: 0;">
+                                <label for="splitCoil" style="margin: 0; font-weight: 600;">Split Coil?</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tolerance Requirements -->
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin-bottom: 15px; color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 5px;">Tolerance Requirements</h3>
+                        <div id="toleranceContainer">
+                            <div class="tolerance-set" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #dee2e6;">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: end;">
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Thickness Tolerance</label>
+                                        <input type="text" class="nmp-form-control" placeholder="±.005">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Width Tolerance</label>
+                                        <input type="text" class="nmp-form-control" placeholder="±.010">
+                                    </div>
+                                    <div>
+                                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Length Tolerance</label>
+                                        <input type="text" class="nmp-form-control" placeholder="±.250 / –.000">
+                                    </div>
+                                    <div>
+                                        <button type="button" onclick="removeToleranceSet(this)" class="nmp-btn" style="background: #dc3545;">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addToleranceSet()" class="nmp-btn" style="background: #28a745; margin-top: 10px;">+ Add Tolerance Set</button>
+                    </div>
+
+                    <!-- Quote Items -->
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin: 0 0 20px 0; color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 5px;">Quote Items</h3>
+                        
+                        <!-- Slitting Jobs Section -->
+                        <div id="slittingSection" style="display: none;">
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #dee2e6;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h5 style="margin: 0; color: var(--primary-blue);">Slitting Jobs</h5>
+                                    <button type="button" id="addSlittingJobBtn" class="nmp-btn" style="background: #28a745; border-color: #28a745; padding: 8px 16px; font-size: 0.9rem;">
+                                        <i class="fas fa-plus" style="margin-right: 8px;"></i>Add Slitting Job
+                                    </button>
+                                </div>
+                                <div id="slittingJobsContainer"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Cut-to-Length Jobs Section -->
+                        <div id="cutToLengthSection" style="display: none;">
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #dee2e6;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h5 style="margin: 0; color: var(--primary-blue);">Cut-to-Length Jobs</h5>
+                                    <button type="button" id="addCutToLengthJobBtn" class="nmp-btn" style="background: #28a745; border-color: #28a745; padding: 8px 16px; font-size: 0.9rem;">
+                                        <i class="fas fa-plus" style="margin-right: 8px;"></i>Add Cut-to-Length Job
+                                    </button>
+                                </div>
+                                <div id="cutToLengthJobsContainer"></div>
+                            </div>
+                        </div>
+                        
+                        <div id="quoteItemsContainer">
+                            <!-- Quote items will be dynamically added here -->
+                        </div>
+                    </div>
+
+                    <!-- Pricing Information -->
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="margin-bottom: 15px; color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); padding-bottom: 5px;">Pricing Information</h3>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Pricing Method</label>
+                                <select id="pricingMethod" class="nmp-form-control" required>
+                                    <option value="">Select Method</option>
+                                    <option value="CWT">CWT (per 100 lbs)</option>
+                                    <option value="LOT">Lot Price</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Unit Price</label>
+                                <input type="number" id="unitPrice" class="nmp-form-control" placeholder="0.00" step="0.01">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button type="submit" class="nmp-btn" style="padding: 15px 40px; font-size: 1.1rem;">
+                            Create Quote
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global state for quote items
+let quoteItems = [];
+let itemCounter = 0;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize form
+    initializeQuoteForm();
+    
+    // Set up extraction handlers
+    document.getElementById('extractEmailBtn').addEventListener('click', handleEmailExtraction);
+    document.getElementById('extractFileBtn').addEventListener('click', handleFileExtraction);
+    
+    // Set up form submission
+    document.getElementById('quoteForm').addEventListener('submit', handleFormSubmit);
+    
+    // Set up process type change handler
+    document.getElementById('processType').addEventListener('change', handleProcessTypeChange);
+    
+    // Set up job section handlers
+    document.getElementById('addSlittingJobBtn').addEventListener('click', addSlittingJob);
+    document.getElementById('addCutToLengthJobBtn').addEventListener('click', addCutToLengthJob);
+});
+
+function initializeQuoteForm() {
+    // Set today's date
+    const today = new Date().toISOString().split('T')[0];
+    const dateCreatedField = document.getElementById('dateCreated');
+    if (dateCreatedField) {
+        dateCreatedField.value = today;
+    }
+    
+    // Set date required (30 days from now as default)
+    const defaultRequired = new Date();
+    defaultRequired.setDate(defaultRequired.getDate() + 30);
+    const dateRequiredField = document.getElementById('dateRequired');
+    if (dateRequiredField) {
+        dateRequiredField.value = defaultRequired.toISOString().split('T')[0];
+    }
+    
+    // Generate quote number
+    generateQuoteNumber();
+}
+
+function generateQuoteNumber() {
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+    const timeStr = String(date.getHours()).padStart(2, '0') + String(date.getMinutes()).padStart(2, '0');
+    const quoteNumber = `Q-${dateStr}-${timeStr}`;
+    document.getElementById('quoteNumber').value = quoteNumber;
+}
+
+function handleProcessTypeChange() {
+    const processType = document.getElementById('processType').value;
+    const slittingSection = document.getElementById('slittingSection');
+    const cutToLengthSection = document.getElementById('cutToLengthSection');
+    
+    // Hide all sections initially
+    slittingSection.style.display = 'none';
+    cutToLengthSection.style.display = 'none';
+    
+    // Show appropriate sections based on selection
+    if (processType === 'Slitting') {
+        slittingSection.style.display = 'block';
+        // Add initial slitting job if container is empty
+        if (document.getElementById('slittingJobsContainer').children.length === 0) {
+            addSlittingJob();
+        }
+    } else if (processType === 'Cut-to-Length') {
+        cutToLengthSection.style.display = 'block';
+        // Add initial cut-to-length job if container is empty
+        if (document.getElementById('cutToLengthJobsContainer').children.length === 0) {
+            addCutToLengthJob();
+        }
+    } else if (processType === 'Both') {
+        slittingSection.style.display = 'block';
+        cutToLengthSection.style.display = 'block';
+        // Add initial jobs if containers are empty
+        if (document.getElementById('slittingJobsContainer').children.length === 0) {
+            addSlittingJob();
+        }
+        if (document.getElementById('cutToLengthJobsContainer').children.length === 0) {
+            addCutToLengthJob();
+        }
+    }
+}
+
+function addSlittingJob() {
+    const container = document.getElementById('slittingJobsContainer');
+    const jobId = Date.now(); // Unique ID for this job
+    
+    const jobHtml = `
+        <div class="slitting-job" data-job-id="${jobId}" style="background: #f8fafe; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--steel-gray);">
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Grade</label>
+                    <input type="text" class="nmp-form-control slitting-input" data-field="materialGrade" data-job-id="${jobId}" placeholder="A36">
+                </div>
+                <div style="flex: 2; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Coil Description</label>
+                    <input type="text" class="nmp-form-control slitting-input" data-field="coilDescription" data-job-id="${jobId}" placeholder="0.500 x 12.00 x COIL">
+                </div>
+                <div style="flex: 0 0 auto; align-self: end;">
+                    <button type="button" onclick="removeSlittingJob(${jobId})" class="nmp-btn" style="background: #dc3545; margin-top: 27px;">Remove</button>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Coils</label>
+                    <input type="number" class="nmp-form-control slitting-input calculation-input" data-field="incomingCoils" data-job-id="${jobId}" placeholder="1" step="1">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Weight (lbs)</label>
+                    <input type="number" class="nmp-form-control slitting-input calculation-input" data-field="incomingWeight" data-job-id="${jobId}" placeholder="20000" step="0.01">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">OD Size (calculated)</label>
+                    <input type="number" class="nmp-form-control slitting-input" data-field="odSize" data-job-id="${jobId}" readonly style="background: #f8f9fa; text-align: center;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">PIW (lbs/in) (calculated)</label>
+                    <input type="number" class="nmp-form-control slitting-input" data-field="piw" data-job-id="${jobId}" readonly style="background: #f8f9fa; text-align: center;">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Slitter Setup</label>
+                    <input type="text" class="nmp-form-control slitting-input" data-field="slitterSetup" data-job-id="${jobId}" placeholder="3.00, 3.00, 3.00, 3.00">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Number of Skids</label>
+                    <input type="number" class="nmp-form-control slitting-input" data-field="numberOfSkids" data-job-id="${jobId}" placeholder="1" min="1" required>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', jobHtml);
+    
+    // Add event listeners for auto-calculation
+    addCalculationListeners(jobId, 'slitting');
+}
+
+function addCutToLengthJob() {
+    const container = document.getElementById('cutToLengthJobsContainer');
+    const jobId = Date.now(); // Unique ID for this job
+    
+    const jobHtml = `
+        <div class="ctl-job" data-job-id="${jobId}" style="background: #f8fafe; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--steel-gray);">
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Grade</label>
+                    <input type="text" class="nmp-form-control ctl-input" data-field="materialGrade" data-job-id="${jobId}" placeholder="A36">
+                </div>
+                <div style="flex: 2; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Material Description</label>
+                    <input type="text" class="nmp-form-control ctl-input" data-field="materialDescription" data-job-id="${jobId}" placeholder="0.500 x 12.00 x 96.00">
+                </div>
+                <div style="flex: 0 0 auto; align-self: end;">
+                    <button type="button" onclick="removeCutToLengthJob(${jobId})" class="nmp-btn" style="background: #dc3545; margin-top: 27px;">Remove</button>
+                </div>
+            </div>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Thickness (in)</label>
+                    <input type="number" class="nmp-form-control ctl-input ctl-calculation-input" data-field="thickness" data-job-id="${jobId}" placeholder="0.500" step="0.001">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Width (in)</label>
+                    <input type="number" class="nmp-form-control ctl-input ctl-calculation-input" data-field="width" data-job-id="${jobId}" placeholder="12.00" step="0.001">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Length (in)</label>
+                    <input type="number" class="nmp-form-control ctl-input ctl-calculation-input" data-field="length" data-job-id="${jobId}" placeholder="96.00" step="0.001">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Incoming Weight (lbs)</label>
+                    <input type="number" class="nmp-form-control ctl-input ctl-calculation-input" data-field="incomingWeight" data-job-id="${jobId}" placeholder="20000" step="0.01">
+                </div>
+            </div>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Finished Pieces (calculated)</label>
+                    <input type="number" class="nmp-form-control ctl-input" data-field="finishedPieces" data-job-id="${jobId}" readonly style="background: #f8f9fa; text-align: center;">
+                </div>
+                <div style="flex: 3; min-width: 300px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Pack Instructions</label>
+                    <input type="text" class="nmp-form-control ctl-input" data-field="packInstructions" data-job-id="${jobId}" placeholder="Bundle specifications">
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', jobHtml);
+    
+    // Add calculation listeners for the new CTL job
+    addCtlCalculationListeners(jobId);
+}
+
+function removeSlittingJob(jobId) {
+    const jobElement = document.querySelector(`[data-job-id="${jobId}"]`);
+    if (jobElement) {
+        jobElement.remove();
+    }
+}
+
+function removeCutToLengthJob(jobId) {
+    const jobElement = document.querySelector(`[data-job-id="${jobId}"]`);
+    if (jobElement) {
+        jobElement.remove();
+    }
+}
+
+function addCalculationListeners(jobId, type) {
+    const inputs = document.querySelectorAll(`[data-job-id="${jobId}"].calculation-input`);
+    inputs.forEach(input => {
+        input.addEventListener('input', () => calculateOdAndPiw(jobId));
+    });
+}
+
+function calculateOdAndPiw(jobId) {
+    const jobElement = document.querySelector(`[data-job-id="${jobId}"]`);
+    if (!jobElement) return;
+    
+    // Get input values
+    const thickness = parseFloat(jobElement.querySelector('[data-field="thickness"]').value) || 0;
+    const width = parseFloat(jobElement.querySelector('[data-field="width"]').value) || 0;
+    const weight = parseFloat(jobElement.querySelector('[data-field="incomingWeight"]').value) || 0;
+    const coils = parseFloat(jobElement.querySelector('[data-field="incomingCoils"]').value) || 1;
+    const innerDiameter = parseFloat(jobElement.querySelector('[data-field="innerDiameter"]').value) || 20;
+    
+    if (thickness > 0 && width > 0 && weight > 0 && coils > 0) {
+        // Calculate OD using the formula: OD = sqrt((4 * weight) / (π * width * thickness * density * coils) + ID²)
+        // Using steel density of 0.2836 lb/in³
+        const steelDensity = 0.2836;
+        const weightPerCoil = weight / coils;
+        
+        // OD calculation
+        const odSquared = (4 * weightPerCoil) / (Math.PI * width * thickness * steelDensity) + Math.pow(innerDiameter, 2);
+        const od = Math.sqrt(odSquared);
+        
+        // PIW calculation (Pounds per Inch of Width)
+        const piw = (thickness * steelDensity * 12); // 12 inches per foot
+        
+        // Update the calculated fields
+        const odField = jobElement.querySelector('[data-field="odSize"]');
+        const piwField = jobElement.querySelector('[data-field="piw"]');
+        
+        if (odField && !isNaN(od) && isFinite(od)) {
+            odField.value = od.toFixed(2);
+        }
+        
+        if (piwField && !isNaN(piw) && isFinite(piw)) {
+            piwField.value = piw.toFixed(3);
+        }
+    }
+}
+
+function addCtlCalculationListeners(jobId) {
+    const inputs = document.querySelectorAll(`[data-job-id="${jobId}"].ctl-calculation-input`);
+    inputs.forEach(input => {
+        input.addEventListener('input', () => calculateCtlFinishedPieces(jobId));
+    });
+}
+
+function calculateCtlFinishedPieces(jobId) {
+    const jobElement = document.querySelector(`[data-job-id="${jobId}"]`);
+    if (!jobElement) return;
+    
+    // Get input values
+    const thickness = parseFloat(jobElement.querySelector('[data-field="thickness"]').value) || 0;
+    const width = parseFloat(jobElement.querySelector('[data-field="width"]').value) || 0;
+    const length = parseFloat(jobElement.querySelector('[data-field="length"]').value) || 0;
+    const incomingWeight = parseFloat(jobElement.querySelector('[data-field="incomingWeight"]').value) || 0;
+    
+    if (thickness > 0 && width > 0 && length > 0 && incomingWeight > 0) {
+        // Calculate finished pieces using the formula:
+        // Finished Pieces = Incoming Weight / (Thickness × Width × Length × 0.2836)
+        const steelDensity = 0.2836;
+        const finishedPieces = incomingWeight / (thickness * width * length * steelDensity);
+        
+        // Update the finished pieces field (rounded to nearest whole number)
+        const finishedPiecesField = jobElement.querySelector('[data-field="finishedPieces"]');
+        if (finishedPiecesField && !isNaN(finishedPieces) && isFinite(finishedPieces)) {
+            finishedPiecesField.value = Math.round(finishedPieces);
+        }
+    }
+}
+
+
+
+function handleEmailExtraction() {
+    const emailText = document.getElementById('emailTextInput').value.trim();
+    
+    if (!emailText) {
+        alert('Please enter email text to extract');
+        return;
+    }
+    
+    const extractBtn = document.getElementById('extractEmailBtn');
+    const originalText = extractBtn.textContent;
+    extractBtn.textContent = 'Extracting...';
+    extractBtn.disabled = true;
+    
+    fetch('/api/extract-quote-text', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: emailText })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.extracted_data) {
+            processExtractedData(data.extracted_data);
+            document.getElementById('extractedContent').style.display = 'block';
+        } else {
+            alert('Error extracting quote data: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error extracting quote data. Please try again.');
+    })
+    .finally(() => {
+        extractBtn.textContent = originalText;
+        extractBtn.disabled = false;
+    });
+}
+
+function handleFileExtraction() {
+    const fileInput = document.getElementById('quoteFileInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert('Please select a file to extract');
+        return;
+    }
+    
+    const extractBtn = document.getElementById('extractFileBtn');
+    const originalText = extractBtn.textContent;
+    extractBtn.textContent = 'Extracting...';
+    extractBtn.disabled = true;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/extract-quote-file', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.extracted_data) {
+            processExtractedData(data.extracted_data);
+            document.getElementById('extractedContent').style.display = 'block';
+        } else {
+            alert('Error extracting quote data: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error extracting quote data. Please try again.');
+    })
+    .finally(() => {
+        extractBtn.textContent = originalText;
+        extractBtn.disabled = false;
+    });
+}
+
+function processExtractedData(data) {
+    // Update extracted info display
+    const mappedData = {
+        po: data.customer_po || '-',
+        material: data.material_description || '-',
+        process: data.process_type || '-',
+        thickness: extractFirstItem(data.items, 'thickness') || '-',
+        width: extractFirstItem(data.items, 'width') || '-',
+        weight: extractFirstItem(data.items, 'weight') || '-'
+    };
+    
+    updateExtractedInfo(mappedData);
+    populateFormFromExtraction(data);
+}
+
+function extractFirstItem(items, field) {
+    if (items && items.length > 0 && items[0][field]) {
+        return items[0][field].toString();
+    }
+    return null;
+}
+
+function updateExtractedInfo(data) {
+    document.getElementById('extractedPO').textContent = data.po;
+    document.getElementById('extractedMaterial').textContent = data.material;
+    document.getElementById('extractedProcess').textContent = data.process;
+    document.getElementById('extractedThickness').textContent = data.thickness;
+    document.getElementById('extractedWidth').textContent = data.width;
+    document.getElementById('extractedWeight').textContent = data.weight;
+}
+
+function populateFormFromExtraction(data) {
+    // Auto-populate form fields from extracted data
+    if (data.process_type) {
+        document.getElementById('processType').value = data.process_type;
+    }
+    if (data.material_description) {
+        document.getElementById('materialGrade').value = data.material_description;
+    }
+    if (data.customer_name) {
+        document.getElementById('customerName').value = data.customer_name;
+    }
+    if (data.pricing_method) {
+        document.getElementById('pricingMethod').value = data.pricing_method;
+    }
+    
+    // Clear existing items and populate with extracted items
+    if (data.items && data.items.length > 0) {
+        // Clear current items
+        quoteItems = [];
+        document.getElementById('quoteItemsContainer').innerHTML = '';
+        itemCounter = 0;
+        
+        // Add items from extraction
+        data.items.forEach((item, index) => {
+            addQuoteItem();
+            const itemId = index;
+            const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+            
+            if (itemElement) {
+                if (item.thickness) {
+                    itemElement.querySelector('[data-field="thickness"]').value = item.thickness;
+                    updateItemData(itemId, 'thickness', item.thickness);
+                }
+                if (item.width) {
+                    itemElement.querySelector('[data-field="width"]').value = item.width;
+                    updateItemData(itemId, 'width', item.width);
+                }
+                if (item.weight) {
+                    itemElement.querySelector('[data-field="weight"]').value = item.weight;
+                    updateItemData(itemId, 'weight', item.weight);
+                }
+                if (item.length) {
+                    itemElement.querySelector('[data-field="length"]').value = item.length;
+                    updateItemData(itemId, 'length', item.length);
+                }
+                if (item.quantity) {
+                    itemElement.querySelector('[data-field="quantity"]').value = item.quantity;
+                    updateItemData(itemId, 'quantity', item.quantity);
+                }
+                
+                // Set default coil ID if not provided
+                const coilId = item.coil_id || '20';
+                itemElement.querySelector('[data-field="coilId"]').value = coilId;
+                updateItemData(itemId, 'coilId', coilId);
+                
+                // Calculate metrics for this item
+                calculateItemMetrics(itemId);
+            }
+        });
+    } else if (quoteItems.length > 0) {
+        // Fallback: populate first item with any available data
+        const firstItemId = quoteItems[0].id;
+        const firstItemElement = document.querySelector(`[data-item-id="${firstItemId}"]`);
+        
+        if (firstItemElement && data.material_description) {
+            // Try to extract dimensions from material description
+            const materialMatch = data.material_description.match(/(\d*\.?\d+)\s*x\s*(\d*\.?\d+)/);
+            if (materialMatch) {
+                const thickness = materialMatch[1];
+                const width = materialMatch[2];
+                
+                firstItemElement.querySelector('[data-field="thickness"]').value = thickness;
+                firstItemElement.querySelector('[data-field="width"]').value = width;
+                firstItemElement.querySelector('[data-field="coilId"]').value = '20';
+                
+                updateItemData(firstItemId, 'thickness', thickness);
+                updateItemData(firstItemId, 'width', width);
+                updateItemData(firstItemId, 'coilId', '20');
+                calculateItemMetrics(firstItemId);
+            }
+        }
+    }
+}
+
+function handleFormSubmit(event) {
+    event.preventDefault();
+    
+    // Collect form data
+    const formData = {
+        quoteNumber: document.getElementById('quoteNumber').value,
+        quoteDate: document.getElementById('quoteDate').value,
+        customerName: document.getElementById('customerName').value,
+        quoteValidUntil: document.getElementById('quoteValidUntil').value,
+        processType: document.getElementById('processType').value,
+        materialGrade: document.getElementById('materialGrade').value,
+        pricingMethod: document.getElementById('pricingMethod').value,
+        unitPrice: document.getElementById('unitPrice').value,
+        items: quoteItems.filter(item => item.thickness || item.width || item.weight) // Only include items with data
+    };
+    
+    // Validate required fields
+    if (!formData.customerName || !formData.processType || !formData.pricingMethod) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    if (formData.items.length === 0) {
+        alert('Please add at least one quote item');
+        return;
+    }
+    
+    // Submit quote
+    submitQuote(formData);
+}
+
+function submitQuote(quoteData) {
+    // Show loading state
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Creating Quote...';
+    submitBtn.disabled = true;
+    
+    // Submit to backend
+    fetch('/api/create-quote', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(quoteData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Quote created successfully!');
+            // Reset form or redirect
+            location.reload();
+        } else {
+            alert('Error creating quote: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating quote. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+// Tolerance Management Functions
+function addToleranceSet() {
+    const container = document.getElementById('toleranceContainer');
+    const toleranceHtml = `
+        <div class="tolerance-set" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #dee2e6;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: end;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Thickness Tolerance</label>
+                    <input type="text" class="nmp-form-control" placeholder="±.005">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Width Tolerance</label>
+                    <input type="text" class="nmp-form-control" placeholder="±.010">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Length Tolerance</label>
+                    <input type="text" class="nmp-form-control" placeholder="±.250 / –.000">
+                </div>
+                <div>
+                    <button type="button" onclick="removeToleranceSet(this)" class="nmp-btn" style="background: #dc3545;">Remove</button>
+                </div>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', toleranceHtml);
+}
+
+function removeToleranceSet(button) {
+    const toleranceSet = button.closest('.tolerance-set');
+    const container = document.getElementById('toleranceContainer');
+    
+    // Ensure at least one tolerance set remains
+    if (container.children.length > 1) {
+        toleranceSet.remove();
+    } else {
+        alert('At least one tolerance set is required.');
+    }
+}
+</script>
+
+<style>
+.nmp-form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+}
+
+.nmp-form-control:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 2px rgba(0, 91, 170, 0.1);
+}
+
+.nmp-form-control:required {
+    border-left: 3px solid var(--primary-blue);
+}
+
+#extractedContent {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
