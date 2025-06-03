@@ -1,0 +1,200 @@
+{
+  "timestamp": "2025-06-02T18:18:50.192816",
+  "total_routes_tested": 25,
+  "successful_routes": 25,
+  "failed_routes": 0,
+  "detailed_results": {
+    "Main Navigation": [
+      {
+        "route": "/",
+        "description": "Main/Dashboard",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/dashboard",
+        "description": "Dashboard",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/login",
+        "description": "Login Page",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/logout",
+        "description": "Logout",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/oauth2callback",
+        "description": "OAuth Callback",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/user-admin",
+        "description": "User Administration",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/user-directory",
+        "description": "User Directory",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/create-user",
+        "description": "Create User",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/control",
+        "description": "Control Panel",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      }
+    ],
+    "Core Functionality": [
+      {
+        "route": "/bol-extractor",
+        "description": "BOL Extractor",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/upload",
+        "description": "File Upload",
+        "status_code": 405,
+        "result": "\u2705 WORKING (POST route - expected)"
+      },
+      {
+        "route": "/work-order-form",
+        "description": "Work Order Form",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/finished-tag",
+        "description": "Finished Tag Form",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      }
+    ],
+    "History & Tracking": [
+      {
+        "route": "/work-order-history",
+        "description": "Work Order History",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/bol-history",
+        "description": "BOL History",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/history",
+        "description": "Job History",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      }
+    ],
+    "Invoice System": [
+      {
+        "route": "/invoices",
+        "description": "Invoice Dashboard",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/generate-invoice",
+        "description": "Invoice Generator",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/audit-invoice-integrity",
+        "description": "Invoice Audit",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      }
+    ],
+    "BOL Management": [
+      {
+        "route": "/upload-signed-bol",
+        "description": "Upload Signed BOL",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      }
+    ],
+    "Data Management": [
+      {
+        "route": "/suppliers",
+        "description": "Suppliers Management",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      }
+    ],
+    "API Endpoints": [
+      {
+        "route": "/work_orders.json",
+        "description": "Work Orders JSON Data",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/api/invoices",
+        "description": "Invoice API Data",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/api/bol-history",
+        "description": "BOL History API",
+        "status_code": 302,
+        "result": "\u2705 WORKING (redirects to login - expected)"
+      },
+      {
+        "route": "/api/lookup-heat-numbers",
+        "description": "Heat Number Lookup API",
+        "status_code": 405,
+        "result": "\u2705 WORKING (POST route - expected)"
+      }
+    ]
+  },
+  "missing_routes": [],
+  "working_routes": [
+    "/",
+    "/dashboard",
+    "/login",
+    "/logout",
+    "/oauth2callback",
+    "/user-admin",
+    "/user-directory",
+    "/create-user",
+    "/control",
+    "/bol-extractor",
+    "/upload",
+    "/work-order-form",
+    "/finished-tag",
+    "/work-order-history",
+    "/bol-history",
+    "/history",
+    "/invoices",
+    "/generate-invoice",
+    "/audit-invoice-integrity",
+    "/upload-signed-bol",
+    "/suppliers",
+    "/work_orders.json",
+    "/api/invoices",
+    "/api/bol-history",
+    "/api/lookup-heat-numbers"
+  ]
+}

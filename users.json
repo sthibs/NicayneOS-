@@ -1,0 +1,23 @@
+{
+  "users": {
+    "admin": {
+      "username": "admin",
+      "email": "admin@caios.app",
+      "role": "admin",
+      "password_hash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+      "created_at": "2025-06-02T13:54:16.520759",
+      "active": true,
+      "last_login": "2025-06-02T13:58:54.902051"
+    },
+    "kp": {
+      "username": "kp",
+      "email": "kp@caios.app",
+      "role": "operator",
+      "password_hash": "0a19533d8eae0719d0e75b3cfb2d80808111b7612756418145cc7103e621f352",
+      "created_at": "2025-06-02T15:06:56.051869",
+      "active": true,
+      "last_login": null
+    }
+  },
+  "sessions": {}
+}

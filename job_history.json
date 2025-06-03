@@ -1,0 +1,22 @@
+[
+  {
+    "filename": "MAK_TEST_BOL_5_PAGE.pdf",
+    "timestamp": "2025-06-02 14:37:11",
+    "pages": 5,
+    "coils": 15,
+    "processing_time": "46.82s",
+    "status": "\u2705 Success",
+    "errors": [],
+    "backup": null
+  },
+  {
+    "filename": "MAK_TEST_BOL_4_PAGE.pdf",
+    "timestamp": "2025-06-02 14:32:11",
+    "pages": 4,
+    "coils": 11,
+    "processing_time": "33.17s",
+    "status": "\u2705 Success",
+    "errors": [],
+    "backup": null
+  }
+]

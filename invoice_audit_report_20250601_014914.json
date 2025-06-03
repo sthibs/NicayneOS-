@@ -1,0 +1,55 @@
+{
+  "audit_timestamp": "2025-06-01T01:49:14.027081",
+  "summary": {
+    "total_errors": 0,
+    "total_warnings": 2,
+    "data_integrity_status": "PASS"
+  },
+  "results": {
+    "total_records": 2,
+    "valid_records": 2,
+    "invalid_records": 0,
+    "total_invoices": 2,
+    "total_value": 1449.4825,
+    "current_month_invoices": 2,
+    "current_month_value": 1449.4825,
+    "customer_breakdown": {
+      "samuel": {
+        "count": 2,
+        "value": 1449.4825
+      }
+    },
+    "monthly_breakdown": {
+      "2025-06": {
+        "count": 2,
+        "value": 1449.4825
+      }
+    },
+    "dashboard_comparison": {
+      "audit_total": 2,
+      "dashboard_total": 2,
+      "audit_value": 1449.4825,
+      "dashboard_value": 1449.4825,
+      "audit_month_count": 2,
+      "dashboard_month_count": 2,
+      "audit_month_value": 1449.4825,
+      "dashboard_month_value": 1449.4825,
+      "matches": {
+        "total_count_match": true,
+        "total_value_match": true,
+        "month_count_match": true,
+        "month_value_match": true
+      }
+    },
+    "file_integrity": {
+      "found": 0,
+      "missing": 2,
+      "invalid_path": 0
+    }
+  },
+  "errors": [],
+  "warnings": [
+    "PDF file missing for invoice INV0601250129",
+    "PDF file missing for invoice INV0601250134"
+  ]
+}

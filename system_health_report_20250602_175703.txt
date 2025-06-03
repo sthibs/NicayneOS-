@@ -1,0 +1,42 @@
+================================================================================
+NICAYNE OS COMPREHENSIVE SYSTEM HEALTH REPORT
+================================================================================
+Generated: 2025-06-02T17:57:03.299059
+
+⚠️  WARNINGS:
+  ⚠️  Template templates/dashboard.html has structural issues
+  ⚠️  Template templates/finished_tag.html has structural issues
+
+
+📋 ENVIRONMENT VARIABLES:
+----------------------------------------
+  present: ['GOOGLE_SERVICE_ACCOUNT_KEY_NMP', 'SPREADSHEET_ID_NMP', 'OPENAI_API_KEY', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI', 'DEFAULT_SEND_TO_EMAIL', 'USER_EMAIL_ADDRESS']
+  missing: []
+  status: PASS
+
+📋 FILE STRUCTURE:
+----------------------------------------
+  files: UNKNOWN
+  directories: UNKNOWN
+  status: PASS
+  json_files: UNKNOWN
+  pdf_generators: UNKNOWN
+  templates: UNKNOWN
+
+📋 ROUTE DEFINITIONS:
+----------------------------------------
+  total_defined: 14
+  expected_present: ['/', '/login', '/logout', '/oauth2callback', '/dashboard', '/finished-tag', '/work-order-form', '/bol-extractor', '/user-admin', '/user-directory', '/api/lookup-heat-numbers']
+  missing: []
+  all_routes: ['/login', '/oauth2callback', '/logout', '/', '/dashboard', '/user-admin', '/user-directory', '/bol-extractor', '/upload', '/work-order-form', '/finished-tag', '/create-user', '/control', '/api/lookup-heat-numbers']
+  status: PASS
+
+📋 OAUTH CONFIGURATION:
+----------------------------------------
+  oauth_config: UNKNOWN
+  redirect_uri_format: VALID
+
+📋 GOOGLE INTEGRATIONS:
+----------------------------------------
+  environment_variables: PASS
+  google_service_account: VALID

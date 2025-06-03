@@ -1,0 +1,66 @@
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    NICAYNE METAL PROCESSING OS - SYSTEM AUDIT REPORT         ║
+║                              2025-06-01 04:00:23                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📊 EXECUTIVE SUMMARY:
+├─ Total Tests Run: 22
+├─ ✅ Passed: 20
+├─ ⚠️  Warnings: 1
+├─ ❌ Errors: 1
+└─ 🔧 Portability Score: 100.0%
+
+
+================================================================================
+📋 FUNCTIONALITY TESTS:
+================================================================================
+✅ route__: Route / accessible
+✅ route__dashboard: Route /dashboard accessible
+✅ route__work-order-form: Route /work-order-form accessible
+✅ route__finished-tag: Route /finished-tag accessible
+✅ route__bol-generator: Route /bol-generator accessible
+✅ route__quote-generator: Route /quote-generator accessible
+❌ route__invoices-dashboard: Route /invoices-dashboard returned status 404
+✅ route__manual-upload: Route /manual-upload accessible
+✅ route__quotes: Route /quotes accessible
+✅ route__purchase-orders: Route /purchase-orders accessible
+✅ pdf_imports: All PDF generation modules import successfully
+
+================================================================================
+📋 FILE_ROUTING TESTS:
+================================================================================
+
+================================================================================
+📋 INTEGRITY TESTS:
+================================================================================
+⚠️ google_sheets: Missing worksheets: ['WORK_ORDERS']
+   💡 Suggestion: Create missing worksheets for full functionality
+✅ openai: OpenAI API connection successful
+✅ file_structure: All required files and folders present
+✅ json_work_orders.json: work_orders.json exists and is valid JSON with 35 records
+✅ json_finished_tags.json: finished_tags.json exists and is valid JSON with 2 records
+✅ json_job_history.json: job_history.json exists and is valid JSON with 0 records
+✅ json_bol_tracking.json: bol_tracking.json exists and is valid JSON with 1 records
+✅ json_invoice_tracking.json: invoice_tracking.json exists and is valid JSON with 2 records
+
+================================================================================
+📋 PORTABILITY TESTS:
+================================================================================
+✅ environment_variables: All required environment variables are present
+✅ hardcoded_paths: No obvious hardcoded paths detected
+✅ configuration: Configuration uses environment variables
+
+================================================================================
+🚀 PORTABILITY ASSESSMENT:
+================================================================================
+🟢 EXCELLENT: System is highly portable and ready for deployment
+
+================================================================================
+💡 RECOMMENDATIONS:
+================================================================================
+• google_sheets: Create missing worksheets for full functionality
+
+================================================================================
+📝 AUDIT COMPLETED
+================================================================================
