@@ -1,0 +1,522 @@
+{% extends "base.html" %}
+
+{% block title %}BOL History - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+    <div class="nmp-card">
+        <div class="nmp-card-header">Bill of Lading History</div>
+        <div class="nmp-card-body">
+            <p style="margin-bottom: 30px; color: #666; font-size: 1.1rem;">Browse and download previously generated Bills of Lading</p>
+
+            <!-- Filter Section -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; padding: 20px; background: #f8fafe; border-radius: 8px; border: 1px solid var(--primary-blue);">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer Name</label>
+                    <select id="customerFilter" class="nmp-form-control" onchange="loadCustomerPOs()">
+                        <option value="">All Customers</option>
+                        <option value="samuel">SAMUEL</option>
+                        <option value="ACME STEEL">ACME STEEL</option>
+                        <option value="MIDWEST METAL">MIDWEST METAL</option>
+                        <option value="PRECISION PARTS">PRECISION PARTS</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">PO Number</label>
+                    <select id="poFilter" class="nmp-form-control">
+                        <option value="">All PO Numbers</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date Range</label>
+                    <select id="dateFilter" class="nmp-form-control">
+                        <option value="">All Dates</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; align-items: end; gap: 10px;">
+                    <button onclick="loadBOLHistory()" class="nmp-btn" style="flex: 1;">
+                        Load BOLs
+                    </button>
+                    <button onclick="exportToCSV()" class="nmp-btn nmp-btn-secondary" style="flex: 1;">
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="searchInput" class="nmp-form-control" placeholder="Search by BOL number, work order, customer, or PO..." 
+                       onkeyup="filterBOLTable()" style="width: 100%; max-width: 500px;">
+            </div>
+
+            <!-- Summary Banner -->
+            <div id="summaryBanner" style="display: none; margin-bottom: 20px; padding: 15px; background: #e8f4fd; border-radius: 8px; border: 1px solid var(--primary-blue);">
+                <div style="font-weight: 600; color: var(--primary-blue);" id="summaryText"></div>
+            </div>
+
+            <!-- BOL Table -->
+            <div id="bolTableContainer" style="display: none;">
+                <div style="overflow-x: auto;">
+                    <table id="bolTable" style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <thead style="background: var(--primary-blue); color: white;">
+                            <tr>
+                                <th style="padding: 15px; text-align: left; cursor: pointer;" onclick="sortTable(0)">
+                                    BOL Number <span class="sort-arrow">↕</span>
+                                </th>
+                                <th style="padding: 15px; text-align: left; cursor: pointer;" onclick="sortTable(1)">
+                                    Work Order # <span class="sort-arrow">↕</span>
+                                </th>
+                                <th style="padding: 15px; text-align: left; cursor: pointer;" onclick="sortTable(2)">
+                                    Date Generated <span class="sort-arrow">↕</span>
+                                </th>
+                                <th style="padding: 15px; text-align: left;">Customer</th>
+                                <th style="padding: 15px; text-align: left;">PO Number</th>
+                                <th style="padding: 15px; text-align: center; cursor: pointer;" onclick="sortTable(5)">
+                                    Total Bundles <span class="sort-arrow">↕</span>
+                                </th>
+                                <th style="padding: 15px; text-align: center; cursor: pointer;" onclick="sortTable(6)">
+                                    Total Weight <span class="sort-arrow">↕</span>
+                                </th>
+                                <th style="padding: 15px; text-align: center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bolTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" style="display: flex; justify-content: center; align-items: center; margin-top: 20px; gap: 10px;">
+                    <button onclick="changePage(-1)" class="nmp-btn nmp-btn-secondary" style="padding: 8px 15px;">Previous</button>
+                    <span id="pageInfo" style="color: #666;">Page 1 of 1</span>
+                    <button onclick="changePage(1)" class="nmp-btn nmp-btn-secondary" style="padding: 8px 15px;">Next</button>
+                </div>
+            </div>
+
+            <!-- No Results Message -->
+            <div id="noResultsMessage" style="display: none; text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 1.2rem; margin-bottom: 10px;">No BOLs found</div>
+                <div>Try adjusting your filters or search criteria</div>
+            </div>
+
+            <!-- Loading Message -->
+            <div id="loadingMessage" style="text-align: center; padding: 40px; color: #666;">
+                <div style="font-size: 1.2rem; margin-bottom: 10px;">Select filters to load BOL history</div>
+                <div>Use the dropdowns above to filter and view Bills of Lading</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- BOL Detail Modal -->
+<div id="bolDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; padding: 30px; max-width: 600px; width: 90%; max-height: 80%; overflow-y: auto;">
+        <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 20px;">
+            <h3 style="color: var(--primary-blue); margin: 0;">BOL Details</h3>
+            <button onclick="closeBOLModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">&times;</button>
+        </div>
+        <div id="bolDetailContent">
+            <!-- Content will be populated by JavaScript -->
+        </div>
+    </div>
+</div>
+
+<script>
+let currentBOLData = [];
+let filteredBOLData = [];
+let currentPage = 1;
+const itemsPerPage = 10;
+let sortColumn = 2; // Default sort by date
+let sortDirection = -1; // Descending
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadInitialData();
+});
+
+function loadInitialData() {
+    // Auto-load BOLs on page load
+    loadBOLHistory();
+}
+
+function loadCustomerPOs() {
+    const customerSelect = document.getElementById('customerFilter');
+    const poSelect = document.getElementById('poFilter');
+    const selectedCustomer = customerSelect.value;
+    
+    // Clear PO options
+    poSelect.innerHTML = '<option value="">All PO Numbers</option>';
+    
+    // Sample PO data - in production, this would come from the server
+    const customerPOData = {
+        'samuel': ['23456', '23457', '23458', '23460', '23461'],
+        'ACME STEEL': ['88888', '88889'],
+        'MIDWEST METAL': ['77777'],
+        'PRECISION PARTS': ['99999']
+    };
+    
+    if (selectedCustomer && customerPOData[selectedCustomer]) {
+        customerPOData[selectedCustomer].forEach(po => {
+            const option = document.createElement('option');
+            option.value = po;
+            option.textContent = po;
+            poSelect.appendChild(option);
+        });
+    }
+}
+
+function loadBOLHistory() {
+    const loadButton = event?.target;
+    if (loadButton) {
+        const originalText = loadButton.textContent;
+        loadButton.textContent = 'Loading...';
+        loadButton.disabled = true;
+    }
+
+    // Show loading state
+    document.getElementById('loadingMessage').style.display = 'block';
+    document.getElementById('bolTableContainer').style.display = 'none';
+    document.getElementById('noResultsMessage').style.display = 'none';
+    document.getElementById('summaryBanner').style.display = 'none';
+
+    fetch('/api/bol-history')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentBOLData = data.bols;
+                applyFilters();
+                updateSummary();
+                displayBOLTable();
+            } else {
+                showNoResults();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading BOL history:', error);
+            showNoResults();
+        })
+        .finally(() => {
+            if (loadButton) {
+                loadButton.textContent = originalText || 'Load BOLs';
+                loadButton.disabled = false;
+            }
+            document.getElementById('loadingMessage').style.display = 'none';
+        });
+}
+
+function applyFilters() {
+    const customerFilter = document.getElementById('customerFilter').value.toLowerCase();
+    const poFilter = document.getElementById('poFilter').value;
+    const dateFilter = document.getElementById('dateFilter').value;
+    const searchQuery = document.getElementById('searchInput').value.toLowerCase();
+
+    filteredBOLData = currentBOLData.filter(bol => {
+        // Customer filter
+        if (customerFilter && !bol.customer_name.toLowerCase().includes(customerFilter)) {
+            return false;
+        }
+
+        // PO filter
+        if (poFilter && bol.customer_po !== poFilter) {
+            return false;
+        }
+
+        // Date filter
+        if (dateFilter) {
+            const bolDate = new Date(bol.date_generated);
+            const now = new Date();
+            
+            switch (dateFilter) {
+                case 'today':
+                    if (bolDate.toDateString() !== now.toDateString()) return false;
+                    break;
+                case 'week':
+                    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    if (bolDate < weekAgo) return false;
+                    break;
+                case 'month':
+                    if (bolDate.getMonth() !== now.getMonth() || bolDate.getFullYear() !== now.getFullYear()) return false;
+                    break;
+                case 'quarter':
+                    const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+                    if (bolDate < quarterAgo) return false;
+                    break;
+            }
+        }
+
+        // Search filter
+        if (searchQuery) {
+            const searchableText = `${bol.bol_number} ${bol.work_order_number} ${bol.customer_name} ${bol.customer_po}`.toLowerCase();
+            if (!searchableText.includes(searchQuery)) {
+                return false;
+            }
+        }
+
+        return true;
+    });
+
+    // Sort the filtered data
+    sortBOLData();
+}
+
+function sortBOLData() {
+    filteredBOLData.sort((a, b) => {
+        let aVal, bVal;
+        
+        switch (sortColumn) {
+            case 0: // BOL Number
+                aVal = a.bol_number;
+                bVal = b.bol_number;
+                break;
+            case 1: // Work Order
+                aVal = a.work_order_number;
+                bVal = b.work_order_number;
+                break;
+            case 2: // Date
+                aVal = new Date(a.date_generated);
+                bVal = new Date(b.date_generated);
+                break;
+            case 5: // Total Bundles
+                aVal = parseInt(a.total_bundles);
+                bVal = parseInt(b.total_bundles);
+                break;
+            case 6: // Total Weight
+                aVal = parseFloat(a.total_weight);
+                bVal = parseFloat(b.total_weight);
+                break;
+            default:
+                return 0;
+        }
+
+        if (aVal < bVal) return -1 * sortDirection;
+        if (aVal > bVal) return 1 * sortDirection;
+        return 0;
+    });
+}
+
+function sortTable(column) {
+    if (sortColumn === column) {
+        sortDirection *= -1; // Reverse direction
+    } else {
+        sortColumn = column;
+        sortDirection = 1; // Ascending
+    }
+    
+    applyFilters();
+    displayBOLTable();
+    updateSortArrows();
+}
+
+function updateSortArrows() {
+    // Reset all arrows
+    document.querySelectorAll('.sort-arrow').forEach(arrow => {
+        arrow.textContent = '↕';
+    });
+    
+    // Set active arrow
+    const activeArrow = document.querySelectorAll('.sort-arrow')[sortColumn];
+    if (activeArrow) {
+        activeArrow.textContent = sortDirection === 1 ? '↑' : '↓';
+    }
+}
+
+function displayBOLTable() {
+    const tbody = document.getElementById('bolTableBody');
+    tbody.innerHTML = '';
+
+    if (filteredBOLData.length === 0) {
+        showNoResults();
+        return;
+    }
+
+    // Calculate pagination
+    const totalPages = Math.ceil(filteredBOLData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredBOLData.length);
+    const pageData = filteredBOLData.slice(startIndex, endIndex);
+
+    // Populate table
+    pageData.forEach(bol => {
+        const row = document.createElement('tr');
+        row.style.borderBottom = '1px solid #eee';
+        row.style.cursor = 'pointer';
+        row.onmouseover = function() { this.style.backgroundColor = '#f8f9fa'; };
+        row.onmouseout = function() { this.style.backgroundColor = 'white'; };
+
+        const date = new Date(bol.date_generated).toLocaleDateString();
+        
+        row.innerHTML = `
+            <td style="padding: 12px;">
+                <span class="bol-badge" style="background: var(--primary-blue); color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                    ${bol.bol_number}
+                </span>
+            </td>
+            <td style="padding: 12px; font-family: monospace;">${bol.work_order_number}</td>
+            <td style="padding: 12px;">${date}</td>
+            <td style="padding: 12px;">${bol.customer_name}</td>
+            <td style="padding: 12px;">${bol.customer_po}</td>
+            <td style="padding: 12px; text-align: center;">${bol.total_bundles}</td>
+            <td style="padding: 12px; text-align: center;">${parseFloat(bol.total_weight).toFixed(2)} lbs</td>
+            <td style="padding: 12px; text-align: center;">
+                <div style="display: flex; gap: 8px; justify-content: center;">
+                    <button onclick="downloadBOL('${bol.bol_number}'); event.stopPropagation();" class="nmp-btn nmp-btn-secondary" style="padding: 4px 12px; font-size: 12px;">
+                        Download
+                    </button>
+                    <button onclick="viewBOLDetails('${bol.bol_number}'); event.stopPropagation();" class="nmp-btn nmp-btn-secondary" style="padding: 4px 12px; font-size: 12px;">
+                        Details
+                    </button>
+                </div>
+            </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+
+    // Update pagination
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    
+    // Show table
+    document.getElementById('bolTableContainer').style.display = 'block';
+    document.getElementById('noResultsMessage').style.display = 'none';
+}
+
+function updateSummary() {
+    if (filteredBOLData.length === 0) {
+        document.getElementById('summaryBanner').style.display = 'none';
+        return;
+    }
+
+    const totalWeight = filteredBOLData.reduce((sum, bol) => sum + parseFloat(bol.total_weight || 0), 0);
+    const totalBundles = filteredBOLData.reduce((sum, bol) => sum + parseInt(bol.total_bundles || 0), 0);
+    
+    const summaryText = `${filteredBOLData.length} BOL${filteredBOLData.length === 1 ? '' : 's'} found • Total: ${totalBundles} bundles • ${totalWeight.toFixed(2)} lbs`;
+    
+    document.getElementById('summaryText').textContent = summaryText;
+    document.getElementById('summaryBanner').style.display = 'block';
+}
+
+function showNoResults() {
+    document.getElementById('bolTableContainer').style.display = 'none';
+    document.getElementById('noResultsMessage').style.display = 'block';
+    document.getElementById('summaryBanner').style.display = 'none';
+}
+
+function filterBOLTable() {
+    currentPage = 1; // Reset to first page
+    applyFilters();
+    updateSummary();
+    displayBOLTable();
+}
+
+function changePage(direction) {
+    const totalPages = Math.ceil(filteredBOLData.length / itemsPerPage);
+    const newPage = currentPage + direction;
+    
+    if (newPage >= 1 && newPage <= totalPages) {
+        currentPage = newPage;
+        displayBOLTable();
+    }
+}
+
+function downloadBOL(bolNumber) {
+    const downloadUrl = `/download-bol/${bolNumber}`;
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = '';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function viewBOLDetails(bolNumber) {
+    const bol = filteredBOLData.find(b => b.bol_number === bolNumber);
+    if (!bol) return;
+
+    const content = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+            <div><strong>BOL Number:</strong><br>${bol.bol_number}</div>
+            <div><strong>Work Order:</strong><br>${bol.work_order_number}</div>
+            <div><strong>Date Generated:</strong><br>${new Date(bol.date_generated).toLocaleDateString()}</div>
+            <div><strong>Customer:</strong><br>${bol.customer_name}</div>
+            <div><strong>PO Number:</strong><br>${bol.customer_po}</div>
+            <div><strong>Total Bundles:</strong><br>${bol.total_bundles}</div>
+            <div><strong>Total Weight:</strong><br>${parseFloat(bol.total_weight).toFixed(2)} lbs</div>
+            <div><strong>Finished Tags:</strong><br>${bol.finished_tags_count || 'N/A'}</div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="downloadBOL('${bol.bol_number}')" class="nmp-btn">Download PDF</button>
+        </div>
+    `;
+
+    document.getElementById('bolDetailContent').innerHTML = content;
+    document.getElementById('bolDetailModal').style.display = 'block';
+}
+
+function closeBOLModal() {
+    document.getElementById('bolDetailModal').style.display = 'none';
+}
+
+function exportToCSV() {
+    if (filteredBOLData.length === 0) {
+        alert('No data to export');
+        return;
+    }
+
+    const headers = ['BOL Number', 'Work Order', 'Date', 'Customer', 'PO Number', 'Total Bundles', 'Total Weight'];
+    const csvContent = [
+        headers.join(','),
+        ...filteredBOLData.map(bol => [
+            bol.bol_number,
+            bol.work_order_number,
+            new Date(bol.date_generated).toLocaleDateString(),
+            bol.customer_name,
+            bol.customer_po,
+            bol.total_bundles,
+            parseFloat(bol.total_weight).toFixed(2)
+        ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `BOL_History_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// Close modal when clicking outside
+document.getElementById('bolDetailModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBOLModal();
+    }
+});
+</script>
+
+<style>
+.sort-arrow {
+    font-size: 12px;
+    margin-left: 5px;
+    opacity: 0.7;
+}
+
+.bol-badge {
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+#bolTable tbody tr:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+</style>
+{% endblock %}

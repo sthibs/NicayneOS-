@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Work Order Created Successfully</title>
+  <style>
+    body { font-family: sans-serif; background: #f5f5f5; padding: 40px; }
+    .container { background: white; padding: 40px; border-radius: 10px; max-width: 600px; margin: auto; text-align: center; }
+    h1 { color: #28a745; margin-bottom: 30px; }
+    .success-icon { font-size: 60px; color: #28a745; margin-bottom: 20px; }
+    .download-btn { 
+      display: inline-block; 
+      background: #007bff; 
+      color: white; 
+      padding: 15px 30px; 
+      text-decoration: none; 
+      border-radius: 5px; 
+      font-size: 18px; 
+      margin: 20px 10px;
+      transition: background 0.3s;
+    }
+    .download-btn:hover { background: #0056b3; }
+    .nav-links { margin-top: 30px; }
+    .nav-link { color: #007bff; text-decoration: none; margin: 0 15px; }
+    .nav-link:hover { text-decoration: underline; }
+    .work-order-info { 
+      background: #f8f9fa; 
+      padding: 20px; 
+      border-radius: 5px; 
+      margin: 20px 0; 
+      border-left: 4px solid #007bff;
+    }
+  </style>
+  <script>
+    // Automatically trigger download after 2 seconds
+    setTimeout(function() {
+      window.location.href = '{{ download_url }}';
+    }, 2000);
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="success-icon">✅</div>
+    <h1>Work Order Created Successfully!</h1>
+    
+    <div class="work-order-info">
+      <h3>{{ work_order_number }}</h3>
+      <p>Your work order has been saved to Google Sheets and the PDF is ready for download.</p>
+    </div>
+    
+    <p><strong>Your PDF download will start automatically in 2 seconds...</strong></p>
+    
+    <a href="{{ download_url }}" class="download-btn">
+      📥 Download PDF Now
+    </a>
+    
+    <div class="nav-links">
+      <a href="/work-order-form" class="nav-link">Create Another Work Order</a>
+      <a href="/work-order-history" class="nav-link">View Work Order History</a>
+      <a href="/" class="nav-link">Back to Main</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+
+    <!-- Quick Action Cards -->
+    <div class="nmp-action-grid">
+      <div class="nmp-action-card">
+        <h5>Create Work Order</h5>
+        <p>Start a new manufacturing job</p>
+        <a href="/work-order-form" class="nmp-btn">Create Work Order</a>
+      </div>
+      <div class="nmp-action-card">
+        <h5>Finished Tags</h5>
+        <p>Mark items as completed</p>
+        <a href="/finished-tag" class="nmp-btn">Create Finished Tag</a>
+      </div>
+      <div class="nmp-action-card">
+        <h5>BOL Extractor</h5>
+        <p>Process PDF documents</p>
+        <a href="/bol-extractor" class="nmp-btn">Upload BOL</a>
+      </div>
+      <div class="nmp-action-card">
+        <h5>Work Order History</h5>
+        <p>View all work orders</p>
+        <a href="/work-order-history" class="nmp-btn nmp-btn-secondary">View History</a>
+      </div>
+      <div class="nmp-action-card">
+        <h5>Inventory Dashboard</h5>
+        <p>View and manage inventory reports</p>
+        <a href="/inventory-dashboard" class="nmp-btn">Inventory Reports</a>
+      </div>
+    </div>
+
+    <!-- File Upload Section -->
+    <div class="nmp-card">
+      <div class="nmp-card-header">Quick File Upload to PO Folder</div>
+      <div class="nmp-card-body">
+        <form method="POST" enctype="multipart/form-data" action="/dashboard-upload">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div class="nmp-form-group">
+              <label class="nmp-form-label">Customer Name</label>
+              <input type="text" class="nmp-form-control" name="customer" placeholder="Enter customer name" required>
+            </div>
+            <div class="nmp-form-group">
+              <label class="nmp-form-label">PO Number</label>
+              <input type="text" class="nmp-form-control" name="po_number" placeholder="Enter PO number" required>
+            </div>
+            <div class="nmp-form-group">
+              <label class="nmp-form-label">File Type</label>
+              <select class="nmp-form-control nmp-select" name="file_type" required>
+                <option value="invoice">Invoice</option>
+                <option value="bol">Bill of Lading</option>
+                <option value="finished_tag">Finished Tag</option>
+                <option value="other">Other Document</option>
+              </select>
+            </div>
+          </div>
+          <div class="nmp-form-group">
+            <label class="nmp-form-label">Upload File</label>
+            <input type="file" name="file" class="nmp-form-control" required>
+          </div>
+          <button type="submit" class="nmp-btn">Upload to PO Folder</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Recent Activity Table -->
+    <div class="nmp-card">
+      <div class="nmp-card-header">Recent Activity</div>
+      <div class="nmp-card-body">
+        <table class="nmp-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>PO Number</th>
+              <th>Document Type</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if recent_activity %}
+              {% for activity in recent_activity %}
+                <tr>
+                  <td>{{ activity.date }}</td>
+                  <td>{{ activity.customer }}</td>
+                  <td>{{ activity.po_number }}</td>
+                  <td>{{ activity.document_type }}</td>
+                  <td>
+                    <span class="nmp-badge nmp-badge-{{ 'success' if activity.status == 'completed' else 'warning' }}">
+                      {{ activity.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <a href="{{ activity.link }}" class="nmp-btn nmp-btn-secondary" style="padding: 6px 12px; font-size: 0.9rem;">View</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" style="text-align: center; color: #666;">No recent activity</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tools Panel -->
+    <div class="nmp-card">
+      <div class="nmp-card-header">System Tools</div>
+      <div class="nmp-card-body">
+        <div class="nmp-tools-grid">
+          <div class="nmp-tool-section">
+            <h6>Inventory</h6>
+            <ul>
+              <li><a href="/finished-tags-archive">Finished Tags Archive</a></li>
+              <li><a href="#">Inventory Search</a></li>
+            </ul>
+          </div>
+          <div class="nmp-tool-section">
+            <h6>Configuration</h6>
+            <ul>
+              <li><a href="/control-panel">Control Panel</a></li>
+              <li><a href="/suppliers">Supplier Management</a></li>
+            </ul>
+          </div>
+          <div class="nmp-tool-section">
+            <h6>Drive Access</h6>
+            <ul>
+              <li><a href="#">Open Customer Folders</a></li>
+              <li><a href="#">Export PO as ZIP</a></li>
+            </ul>
+          </div>
+          <div class="nmp-tool-section">
+            <h6>System</h6>
+            <ul>
+              <li><a href="/health">Health Check</a></li>
+              <li><a href="/download-backup">Download Backup</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+{% endblock %}

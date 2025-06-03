@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Control Panel - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+    <div class="nmp-card">
+        <div class="nmp-card-header">System Control Panel</div>
+        <div class="nmp-card-body">
+            <p style="margin-bottom: 30px; color: #666; font-size: 1.1rem;">System Configuration and Administration</p>
+
+            <!-- System Stats -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid var(--steel-gray);">
+                    <div style="font-size: 24px; font-weight: bold; color: var(--primary-blue);">{{ config.max_pages }}</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 5px;">Max Pages</div>
+                </div>
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid var(--steel-gray);">
+                    <div style="font-size: 24px; font-weight: bold; color: var(--primary-blue);">{{ config.batch_size }}</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 5px;">Batch Size</div>
+                </div>
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid var(--steel-gray);">
+                    <div style="font-size: 24px; font-weight: bold; color: var(--primary-blue);">{{ config.processing_timeout }}s</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 5px;">Timeout</div>
+                </div>
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid var(--steel-gray);">
+                    <div style="font-size: 24px; font-weight: bold; color: {% if config.enable_backup %}var(--success-green){% else %}#dc3545{% endif %};">{% if config.enable_backup %}ON{% else %}OFF{% endif %}</div>
+                    <div style="font-size: 14px; color: #666; margin-top: 5px;">Backups</div>
+                </div>
+            </div>
+
+            {% if message %}
+                <div style="padding: 15px; margin-bottom: 20px; border-radius: 8px; {% if message.startswith('✅') %}background: #d4edda; border: 1px solid #c3e6cb; color: #155724;{% else %}background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;{% endif %}">
+                    {{ message }}
+                </div>
+            {% endif %}
+            
+            <form method="POST">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+                    <div class="nmp-form-group">
+                        <label class="nmp-form-label">Maximum Pages to Process</label>
+                        <input type="number" name="max_pages" value="{{ config.max_pages }}" min="1" max="100" class="nmp-form-control">
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">Limit PDF processing to prevent system overload</div>
+                    </div>
+                    
+                    <div class="nmp-form-group">
+                        <label class="nmp-form-label">Processing Timeout (seconds)</label>
+                        <input type="number" name="processing_timeout" value="{{ config.processing_timeout }}" min="60" max="1800" class="nmp-form-control">
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">Maximum time to wait for AI processing</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
+                    <div class="nmp-form-group">
+                        <label class="nmp-form-label">Batch Size</label>
+                        <input type="number" name="batch_size" value="{{ config.batch_size }}" min="10" max="100" class="nmp-form-control">
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">Number of records to process in each batch</div>
+                    </div>
+                    
+                    <div class="nmp-form-group">
+                        <label class="nmp-form-label">System Features</label>
+                        <div style="display: flex; align-items: center; margin-top: 10px;">
+                            <input type="checkbox" name="enable_backup" {% if config.enable_backup %}checked{% endif %} style="margin-right: 10px;">
+                            <label style="margin: 0; font-weight: normal;">Enable automatic backups</label>
+                        </div>
+                        <div style="font-size: 12px; color: #666; margin-top: 5px;">Automatically create JSON backups before processing</div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 30px;">
+                    <button type="submit" class="nmp-btn">Update Settings</button>
+                </div>
+            </form>
+
+            <!-- System Information -->
+            <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--steel-gray);">
+                <h3 style="color: var(--primary-blue); margin-bottom: 20px;">System Information</h3>
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; border: 1px solid var(--steel-gray);">
+                    <div style="display: grid; gap: 10px; font-family: monospace; font-size: 14px;">
+                        <div><strong>Flask Environment:</strong> {{ config.get('environment', 'development') }}</div>
+                        <div><strong>Debug Mode:</strong> {{ config.get('debug', False) }}</div>
+                        <div><strong>Database Status:</strong> <span style="color: var(--success-green);">Connected</span></div>
+                        <div><strong>Google Sheets:</strong> <span style="color: var(--success-green);">Active</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

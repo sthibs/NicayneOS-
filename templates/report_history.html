@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Inventory Report History - Nicayne Metal Processing OS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='nmp-style.css') }}">
+    <style>
+        .history-table {
+            font-size: 14px;
+        }
+        .history-table th {
+            background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 12px 8px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .history-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        .history-table tbody tr:hover {
+            background-color: #f7fafc;
+        }
+        .action-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .action-exported {
+            background-color: #c6f6d5;
+            color: #2f855a;
+        }
+        .action-emailed {
+            background-color: #bee3f8;
+            color: #2b6cb0;
+        }
+        .report-type-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            background-color: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+        .pdf-link {
+            color: #3182ce;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .pdf-link:hover {
+            color: #2c5282;
+            text-decoration: underline;
+        }
+        .pdf-missing {
+            color: #e53e3e;
+            font-style: italic;
+            font-size: 12px;
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c5282;
+        }
+        .stat-label {
+            color: #718096;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="nmp-body">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg nmp-navbar">
+        <div class="container">
+            <a class="navbar-brand nmp-brand" href="{{ url_for('dashboard') }}">
+                <strong>NICAYNE METAL PROCESSING OS</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('inventory_dashboard') }}">Inventory</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{{ url_for('report_history') }}">Report History</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="nmp-card">
+                    <div class="nmp-card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="nmp-title mb-1">📊 Inventory Report History</h1>
+                            <p class="text-muted mb-0">Audit log of all inventory report exports and emails</p>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('inventory_dashboard') }}" class="btn btn-primary">
+                                📦 Back to Inventory Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        {% if history %}
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stat-number">{{ history|length }}</div>
+                    <div class="stat-label">Total Reports</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stat-number">{{ history|selectattr('action', 'equalto', 'exported')|list|length }}</div>
+                    <div class="stat-label">PDF Exports</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stat-number">{{ history|selectattr('action', 'equalto', 'emailed')|list|length }}</div>
+                    <div class="stat-label">Email Sends</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stat-number">{{ history|groupby('customer_name')|list|length }}</div>
+                    <div class="stat-label">Unique Customers</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- History Table -->
+        <div class="row">
+            <div class="col-12">
+                {% if error %}
+                <div class="alert alert-danger">
+                    <h6><strong>Error loading history:</strong></h6>
+                    <p class="mb-0">{{ error }}</p>
+                </div>
+                {% elif not history %}
+                <div class="nmp-card">
+                    <div class="nmp-card-body text-center">
+                        <h4>No Report History Found</h4>
+                        <p class="text-muted">No inventory reports have been exported or emailed yet.</p>
+                        <a href="{{ url_for('inventory_dashboard') }}" class="btn btn-primary mt-3">
+                            📦 Generate Your First Report
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="table-container">
+                    <table class="table table-striped history-table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Customer</th>
+                                <th>Report Type</th>
+                                <th>Action</th>
+                                <th>PDF File</th>
+                                <th>Sent By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in history %}
+                            <tr>
+                                <td>
+                                    <strong>{{ entry.timestamp }}</strong>
+                                </td>
+                                <td>
+                                    <strong>{{ entry.customer_name }}</strong>
+                                </td>
+                                <td>
+                                    <span class="report-type-badge">{{ entry.report_type }}</span>
+                                </td>
+                                <td>
+                                    <span class="action-badge action-{{ entry.action }}">
+                                        {% if entry.action == 'exported' %}📄 {{ entry.action }}
+                                        {% elif entry.action == 'emailed' %}📧 {{ entry.action }}
+                                        {% else %}{{ entry.action }}{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if entry.pdf_file %}
+                                        {% if entry.pdf_exists %}
+                                            <a href="/{{ entry.pdf_file }}" class="pdf-link" target="_blank">
+                                                {{ entry.pdf_file.split('/')[-1] }}
+                                            </a>
+                                        {% else %}
+                                            <span class="pdf-missing">{{ entry.pdf_file.split('/')[-1] }} (missing)</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ entry.sent_by or 'system' }}</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Info -->
+                <div class="mt-3">
+                    <small class="text-muted">
+                        Showing {{ history|length }} records. History is automatically limited to the latest 500 entries.
+                    </small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h6><strong>Audit Log Information:</strong></h6>
+                    <ul class="mb-0">
+                        <li><strong>Exported:</strong> PDF was generated and downloaded by a user</li>
+                        <li><strong>Emailed:</strong> PDF was generated and sent via email to customer</li>
+                        <li><strong>PDF Links:</strong> Click to download available PDF files</li>
+                        <li><strong>Missing PDFs:</strong> Files may be cleaned up periodically or moved</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Report history page loaded');
+            
+            // Auto-refresh every 30 seconds if user is actively viewing
+            let isVisible = true;
+            document.addEventListener('visibilitychange', function() {
+                isVisible = !document.hidden;
+            });
+            
+            setInterval(function() {
+                if (isVisible && window.location.pathname === '/report-history') {
+                    // Silently check for updates (optional enhancement)
+                    console.log('Auto-refresh check...');
+                }
+            }, 30000);
+        });
+    </script>
+</body>
+</html>

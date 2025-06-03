@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ status }} Inventory Report - {{ customer_name }} - Nicayne Metal Processing OS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='nmp-style.css') }}">
+    <style>
+        .inventory-table {
+            font-size: 14px;
+        }
+        .inventory-table th {
+            background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+            padding: 12px 8px;
+        }
+        .inventory-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+        .inventory-table tbody tr:hover {
+            background-color: #f7fafc;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-unprocessed {
+            background-color: #fed7d7;
+            color: #c53030;
+        }
+        .status-in-process {
+            background-color: #fef5e7;
+            color: #dd6b20;
+        }
+        .status-processed {
+            background-color: #c6f6d5;
+            color: #2f855a;
+        }
+        .print-btn {
+            background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .no-data-message {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+            font-style: italic;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-optimized {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body class="nmp-body">
+    <!-- Navigation (hidden on print) -->
+    <nav class="navbar navbar-expand-lg nmp-navbar no-print">
+        <div class="container">
+            <a class="navbar-brand nmp-brand" href="{{ url_for('dashboard') }}">
+                <strong>NICAYNE METAL PROCESSING OS</strong>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('inventory_dashboard') }}">Inventory</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <!-- Header Section -->
+        <div class="row mb-4 no-print">
+            <div class="col-12">
+                <div class="nmp-card">
+                    <div class="nmp-card-header d-flex justify-content-between align-items-center">
+                        <div>
+                            <h1 class="nmp-title mb-1">{{ status }} Inventory Report</h1>
+                            <p class="text-muted mb-0">Customer: <strong>{{ customer_name }}</strong></p>
+                        </div>
+                        <div>
+                            <button onclick="window.print()" class="btn print-btn me-2">
+                                🖨️ Print Report
+                            </button>
+                            <a href="/export-pdf/{{ status.lower().replace(' ', '-') }}/{{ customer_name }}" class="btn btn-success me-2">
+                                📄 Export as PDF
+                            </a>
+                            <button onclick="emailReport()" class="btn btn-primary me-2">
+                                📧 Email Report
+                            </button>
+                            <a href="{{ url_for('inventory_dashboard') }}" class="btn btn-secondary">
+                                ← Back to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Print Header (only visible when printing) -->
+        <div class="d-none print-optimized" style="display: none;">
+            <div class="text-center mb-4">
+                <h2>NICAYNE METAL PROCESSING</h2>
+                <h3>{{ status }} Inventory Report</h3>
+                <p><strong>Customer:</strong> {{ customer_name }} | <strong>Date:</strong> {{ current_date }}</p>
+                <hr>
+            </div>
+        </div>
+
+        <!-- Inventory Data Table -->
+        <div class="row">
+            <div class="col-12">
+                {% if inventory_data %}
+                <div class="table-responsive">
+                    <table class="table inventory-table">
+                        <thead>
+                            <tr>
+                                {% if inventory_data[0] %}
+                                    {% for key in inventory_data[0].keys() %}
+                                        {% if key not in ['BOL Number', 'PO Number'] or loop.index <= 10 %}
+                                        <th>{{ key.replace('_', ' ').title() }}</th>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in inventory_data %}
+                            <tr>
+                                {% for key, value in item.items() %}
+                                    {% if key not in ['BOL Number', 'PO Number'] or loop.index <= 10 %}
+                                    <td>
+                                        {% if key == 'Status' %}
+                                            <span class="status-badge status-{{ value.lower().replace(' ', '-').replace('_', '-') }}">
+                                                {{ value }}
+                                            </span>
+                                        {% elif key == 'Date' or 'Date' in key %}
+                                            {{ value if value else '-' }}
+                                        {% elif key in ['Weight', 'Thickness', 'Width', 'Length'] %}
+                                            {{ value if value else '-' }}
+                                        {% elif key in ['Pieces', 'Coil Count'] %}
+                                            {{ value if value else '0' }}
+                                        {% else %}
+                                            {{ value if value else '-' }}
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Summary Section -->
+                <div class="row mt-4 no-print">
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Items</h5>
+                                <h3 class="text-primary">{{ inventory_data|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Weight</h5>
+                                <h3 class="text-success">
+                                    {% set total_weight = 0 %}
+                                    {% for item in inventory_data %}
+                                        {% if item.get('Weight') %}
+                                            {% set total_weight = total_weight + (item.Weight|float) %}
+                                        {% elif item.get('weight') %}
+                                            {% set total_weight = total_weight + (item.weight|float) %}
+                                        {% elif item.get('Total Weight') %}
+                                            {% set total_weight = total_weight + (item['Total Weight']|float) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ "%.2f"|format(total_weight) }} lbs
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-light">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Pieces</h5>
+                                <h3 class="text-info">
+                                    {% set total_pieces = 0 %}
+                                    {% for item in inventory_data %}
+                                        {% if item.get('Pieces') %}
+                                            {% set total_pieces = total_pieces + (item.Pieces|int) %}
+                                        {% elif item.get('pieces') %}
+                                            {% set total_pieces = total_pieces + (item.pieces|int) %}
+                                        {% elif item.get('Coil Count') %}
+                                            {% set total_pieces = total_pieces + (item['Coil Count']|int) %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ total_pieces }}
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% else %}
+                <!-- No Data Message -->
+                <div class="nmp-card">
+                    <div class="nmp-card-body">
+                        <div class="no-data-message">
+                            <h4>No {{ status.lower() }} inventory found</h4>
+                            <p>There are currently no {{ status.lower() }} inventory items for customer <strong>{{ customer_name }}</strong>.</p>
+                            <a href="{{ url_for('inventory_dashboard') }}" class="btn btn-primary mt-3">
+                                ← Return to Inventory Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Footer (print only) -->
+        <div class="d-none print-optimized mt-5" style="display: none;">
+            <hr>
+            <div class="text-center">
+                <small>Generated by Nicayne Metal Processing OS | {{ current_date }}</small>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script>
+        // Print-specific styling
+        window.addEventListener('beforeprint', function() {
+            document.querySelectorAll('.d-none.print-optimized').forEach(el => {
+                el.style.display = 'block';
+            });
+        });
+        
+        window.addEventListener('afterprint', function() {
+            document.querySelectorAll('.d-none.print-optimized').forEach(el => {
+                el.style.display = 'none';
+            });
+        });
+        
+        // Email report function
+        function emailReport() {
+            const customerName = '{{ customer_name }}';
+            const status = '{{ status }}';
+            
+            // Map status to report type
+            let reportType = 'all';
+            if (status === 'Unprocessed') reportType = 'unprocessed';
+            else if (status === 'In-Process') reportType = 'in-process';
+            else if (status === 'Processed') reportType = 'processed';
+            
+            // Show loading indicator
+            const emailBtn = document.querySelector('button[onclick="emailReport()"]');
+            const originalText = emailBtn.innerHTML;
+            emailBtn.innerHTML = '📧 Sending...';
+            emailBtn.disabled = true;
+            
+            // Send email request
+            fetch(`/email-inventory-report/${encodeURIComponent(customerName)}?report_type=${reportType}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`✅ Success!\n\nInventory report successfully sent to customer email.\n\nFilename: ${data.pdf_filename}`);
+                    } else {
+                        alert(`❌ Error\n\nFailed to send email: ${data.error}`);
+                    }
+                })
+                .catch(error => {
+                    alert(`❌ Error\n\nNetwork error: ${error.message}`);
+                })
+                .finally(() => {
+                    // Restore button
+                    emailBtn.innerHTML = originalText;
+                    emailBtn.disabled = false;
+                });
+        }
+        
+        // Auto-focus on load for better UX
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Inventory report loaded for {{ customer_name }} - {{ status }} status');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Extraction Summary</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f8f9fa; }
+    h1 { color: #333; }
+    .summary { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    .summary p { margin: 8px 0; }
+    .error { color: red; }
+    .success { color: green; }
+    .warning { color: orange; }
+    a.button {
+      display: inline-block; padding: 10px 15px; margin-top: 15px;
+      background: #007bff; color: #fff; text-decoration: none; border-radius: 5px;
+    }
+    a.button:hover { background: #0056b3; }
+    .metrics {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px; margin: 20px 0;
+    }
+    .metric-box {
+      background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center;
+      border-left: 4px solid #007bff;
+    }
+    .metric-value { font-size: 24px; font-weight: bold; color: #333; }
+    .metric-label { font-size: 14px; color: #666; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h1>📄 Extraction Summary</h1>
+  <div class="summary">
+    <p><strong>Status:</strong> 
+      <span class="{% if summary.status == 'Success' %}success{% elif summary.status == 'Error' %}error{% else %}warning{% endif %}">
+        {{ summary.status }}
+      </span>
+    </p>
+    
+    <div class="metrics">
+      <div class="metric-box">
+        <div class="metric-value">{{ summary.pages_processed }}</div>
+        <div class="metric-label">Pages Processed</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-value">{{ summary.coils_extracted }}</div>
+        <div class="metric-label">Coils Extracted</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-value">{{ summary.time_taken }}</div>
+        <div class="metric-label">Processing Time</div>
+      </div>
+      {% if summary.failed_pages %}
+      <div class="metric-box">
+        <div class="metric-value">{{ summary.failed_pages|length }}</div>
+        <div class="metric-label">Failed Pages</div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if summary.backup_created %}
+      <p class="success"><strong>✅ JSON Backup:</strong> Created successfully</p>
+    {% endif %}
+    
+    {% if summary.count_validation %}
+      <p class="success"><strong>✅ Data Validation:</strong> All coils written to sheets</p>
+    {% else %}
+      <p class="warning"><strong>⚠️ Data Validation:</strong> Coil count mismatch detected</p>
+    {% endif %}
+
+    {% if summary.failed_pages %}
+      <p class="warning"><strong>⚠️ Failed Pages:</strong> {{ summary.failed_pages|join(', ') }}</p>
+    {% endif %}
+    
+    {% if summary.errors %}
+      <p class="error"><strong>Errors:</strong></p>
+      <ul>
+        {% for err in summary.errors %}
+          <li class="error">{{ err }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    
+    <div style="margin-top: 20px;">
+      <a class="button" href="/">🔄 Process Another Document</a>
+      {% if summary.backup_path %}
+        <a class="button" href="/download-backup/{{ summary.backup_filename }}">⬇️ Download JSON Backup</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <h2>📡 Live Processing Log</h2>
+  <div id="log-box" style="background:#000;color:#0f0;padding:15px;height:300px;overflow:auto;font-family:monospace;border-radius:8px;margin-top:20px;">
+    <div style="color:#888;">Connecting to live log stream...</div>
+  </div>
+
+  <script>
+    const logBox = document.getElementById('log-box');
+    const eventSource = new EventSource("/stream");
+
+    eventSource.onopen = function() {
+      logBox.innerHTML = '<div style="color:#0f0;">[CONNECTED] Live log stream active</div>';
+    };
+
+    eventSource.onmessage = function(event) {
+      if (event.data === '[HEARTBEAT]') {
+        return; // Skip heartbeat messages
+      }
+      logBox.innerHTML += event.data + "\n";
+      logBox.scrollTop = logBox.scrollHeight;
+    };
+
+    eventSource.onerror = function() {
+      logBox.innerHTML += '<div style="color:#f00;">[ERROR] Connection lost</div>';
+    };
+  </script>
+</body>
+</html>

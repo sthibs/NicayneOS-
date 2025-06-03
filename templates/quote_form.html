@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Create Quote - Nicayne Metal Processing{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 style="color: #005baa; margin: 0;">Create Quote</h2>
+                    <div class="btn-group" role="group">
+                        <a href="/quotes" class="nmp-btn">Dashboard</a>
+                        <a href="/quotes/form" class="nmp-btn" style="background: #005baa;">Create Quote</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quote Form -->
+        <div class="card">
+            <div class="card-header" style="background: #005baa; color: white;">
+                <h4 style="margin: 0;">New Quote Form</h4>
+            </div>
+            <div class="card-body">
+                <form id="quoteForm">
+                    <!-- General Information -->
+                    <div class="section-header">
+                        <h5 style="color: #005baa; margin-bottom: 20px;">General Information</h5>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Quote Number</label>
+                            <input type="text" class="nmp-form-control" id="quoteNumber" name="quote_number" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Customer Name</label>
+                            <input type="text" class="nmp-form-control" id="customerName" name="customer_name" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Quote Date</label>
+                            <input type="date" class="nmp-form-control" id="quoteDate" name="quote_date" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Valid Until</label>
+                            <input type="date" class="nmp-form-control" id="quoteValidUntil" name="quote_valid_until" required>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Date Required</label>
+                            <input type="date" class="nmp-form-control" id="dateRequired" name="date_required" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Process Type</label>
+                            <select class="nmp-form-control" id="processType" name="process_type" required>
+                                <option value="">Select Process</option>
+                                <option value="Slitting">Slitting</option>
+                                <option value="Cut-to-Length">Cut-to-Length</option>
+                                <option value="Both">Both</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Pricing Method</label>
+                            <select class="nmp-form-control" id="pricingMethod" name="pricing_method" required>
+                                <option value="">Select Method</option>
+                                <option value="Per Pound">Per Pound</option>
+                                <option value="Per Piece">Per Piece</option>
+                                <option value="Fixed Price">Fixed Price</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Unit Price ($)</label>
+                            <input type="number" class="nmp-form-control" id="unitPrice" name="unit_price" step="0.01" min="0">
+                        </div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label">Packaging Instructions/Customer Request</label>
+                            <textarea class="nmp-form-control" id="packagingInstructions" name="packaging_instructions" rows="3" placeholder="Enter packaging requirements, special instructions, or customer requests..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Slitting Jobs -->
+                    <div class="section-header">
+                        <h5 style="color: #005baa; margin-bottom: 15px;">Slitting Jobs</h5>
+                        <button type="button" onclick="addSlittingJob()" class="nmp-btn">Add Slitting Job</button>
+                    </div>
+                    <div id="slittingJobs" class="mb-4"></div>
+
+                    <!-- Cut-to-Length Jobs -->
+                    <div class="section-header">
+                        <h5 style="color: #005baa; margin-bottom: 15px;">Cut-to-Length Jobs</h5>
+                        <button type="button" onclick="addCTLJob()" class="nmp-btn">Add Cut-to-Length Job</button>
+                    </div>
+                    <div id="ctlJobs" class="mb-4"></div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button type="submit" class="nmp-btn" style="background: #28a745; padding: 12px 30px; font-size: 16px;">Create Quote</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    generateQuoteNumber();
+    setDefaultDates();
+    setupEventListeners();
+});
+
+function generateQuoteNumber() {
+    const now = new Date();
+    const year = now.getFullYear().toString().substr(-2);
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const time = String(now.getHours()).padStart(2, '0') + String(now.getMinutes()).padStart(2, '0');
+    const quoteNumber = `Q${year}${month}${day}-${time}`;
+    document.getElementById('quoteNumber').value = quoteNumber;
+}
+
+function setDefaultDates() {
+    const today = new Date();
+    const validUntil = new Date();
+    validUntil.setDate(today.getDate() + 30); // 30 days from today
+    
+    document.getElementById('quoteDate').value = today.toISOString().split('T')[0];
+    document.getElementById('quoteValidUntil').value = validUntil.toISOString().split('T')[0];
+}
+
+function addSlittingJob() {
+    const container = document.getElementById('slittingJobs');
+    const jobHtml = `
+        <div class="slitting-job" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Width (in)</label>
+                    <input type="number" class="nmp-form-control slitting-width" step="0.001" min="0" onchange="calculateWeight(this)">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Length (ft)</label>
+                    <input type="number" class="nmp-form-control slitting-length" step="0.1" min="0" onchange="calculateWeight(this)">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Thickness (in)</label>
+                    <input type="number" class="nmp-form-control slitting-thickness" step="0.001" min="0" onchange="calculateWeight(this)">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Pieces</label>
+                    <input type="number" class="nmp-form-control slitting-pieces" min="1" onchange="calculateWeight(this)">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Weight (lbs)</label>
+                    <input type="number" class="nmp-form-control slitting-weight" readonly>
+                </div>
+                <div style="display: flex; align-items: end;">
+                    <button type="button" onclick="removeSlittingJob(this)" class="nmp-btn" style="background: #dc3545; width: 100%;">Remove</button>
+                </div>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', jobHtml);
+}
+
+function removeSlittingJob(button) {
+    button.closest('.slitting-job').remove();
+}
+
+function addCTLJob() {
+    const container = document.getElementById('ctlJobs');
+    const jobHtml = `
+        <div class="ctl-job" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Width (in)</label>
+                    <input type="number" class="nmp-form-control ctl-width" step="0.001" min="0" onchange="calculateWeight(this)">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Length (ft)</label>
+                    <input type="number" class="nmp-form-control ctl-length" step="0.1" min="0" onchange="calculateWeight(this)">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Thickness (in)</label>
+                    <input type="number" class="nmp-form-control ctl-thickness" step="0.001" min="0" onchange="calculateWeight(this)">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Pieces</label>
+                    <input type="number" class="nmp-form-control ctl-pieces" min="1" onchange="calculateWeight(this)">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #333;">Weight (lbs)</label>
+                    <input type="number" class="nmp-form-control ctl-weight" readonly>
+                </div>
+                <div style="display: flex; align-items: end;">
+                    <button type="button" onclick="removeCTLJob(this)" class="nmp-btn" style="background: #dc3545; width: 100%;">Remove</button>
+                </div>
+            </div>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', jobHtml);
+}
+
+function removeCTLJob(button) {
+    button.closest('.ctl-job').remove();
+}
+
+function calculateWeight(element) {
+    const job = element.closest('.slitting-job, .ctl-job');
+    const isSlitting = job.classList.contains('slitting-job');
+    
+    const width = parseFloat(job.querySelector(isSlitting ? '.slitting-width' : '.ctl-width').value) || 0;
+    const length = parseFloat(job.querySelector(isSlitting ? '.slitting-length' : '.ctl-length').value) || 0;
+    const thickness = parseFloat(job.querySelector(isSlitting ? '.slitting-thickness' : '.ctl-thickness').value) || 0;
+    const pieces = parseInt(job.querySelector(isSlitting ? '.slitting-pieces' : '.ctl-pieces').value) || 0;
+    
+    if (width && length && thickness && pieces) {
+        // Steel density: 0.2836 lb/in³
+        const volume = width * (length * 12) * thickness; // Convert feet to inches
+        const weight = Math.round(volume * 0.2836 * pieces);
+        job.querySelector(isSlitting ? '.slitting-weight' : '.ctl-weight').value = weight;
+    }
+}
+
+function setupEventListeners() {
+    // Form submission
+    document.getElementById('quoteForm').addEventListener('submit', handleQuoteSubmission);
+}
+
+async function handleQuoteSubmission(event) {
+    event.preventDefault();
+    
+    try {
+        const formData = new FormData(event.target);
+        const data = Object.fromEntries(formData.entries());
+        
+        // Collect slitting jobs
+        const slittingJobs = [];
+        document.querySelectorAll('.slitting-job').forEach(job => {
+            slittingJobs.push({
+                width: parseFloat(job.querySelector('.slitting-width').value) || 0,
+                length: parseFloat(job.querySelector('.slitting-length').value) || 0,
+                thickness: parseFloat(job.querySelector('.slitting-thickness').value) || 0,
+                pieces: parseInt(job.querySelector('.slitting-pieces').value) || 0,
+                weight: parseInt(job.querySelector('.slitting-weight').value) || 0
+            });
+        });
+        
+        // Collect CTL jobs
+        const ctlJobs = [];
+        document.querySelectorAll('.ctl-job').forEach(job => {
+            ctlJobs.push({
+                width: parseFloat(job.querySelector('.ctl-width').value) || 0,
+                length: parseFloat(job.querySelector('.ctl-length').value) || 0,
+                thickness: parseFloat(job.querySelector('.ctl-thickness').value) || 0,
+                pieces: parseInt(job.querySelector('.ctl-pieces').value) || 0,
+                weight: parseInt(job.querySelector('.ctl-weight').value) || 0
+            });
+        });
+        
+        data.slitting_jobs = slittingJobs;
+        data.cut_to_length_jobs = ctlJobs;
+        
+        const response = await fetch('/api/create-quote', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(`Quote ${result.quote_number} created successfully!`);
+            // Redirect to dashboard
+            window.location.href = '/quotes';
+        } else {
+            alert('Error creating quote: ' + result.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error submitting quote form');
+    }
+}
+</script>
+{% endblock %}

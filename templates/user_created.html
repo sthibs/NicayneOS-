@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}User Created Successfully - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>User Created Successfully
+                    </h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-user-check text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    
+                    <h4 class="text-success mb-3">Account Setup Complete</h4>
+                    
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-envelope me-2"></i>Email Address Created</h6>
+                        <strong>{{ email }}</strong>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6><i class="fas fa-key me-2"></i>Next Steps</h6>
+                                    <ul class="list-unstyled mb-0 text-start">
+                                        <li><i class="fas fa-arrow-right text-primary me-2"></i>Temporary password assigned</li>
+                                        <li><i class="fas fa-arrow-right text-primary me-2"></i>User should reset password on first login</li>
+                                        <li><i class="fas fa-arrow-right text-primary me-2"></i>OAuth setup may be required for email</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6><i class="fas fa-shield-alt me-2"></i>System Access</h6>
+                                    <ul class="list-unstyled mb-0 text-start">
+                                        <li><i class="fas fa-check text-success me-2"></i>Account is active</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Role permissions applied</li>
+                                        <li><i class="fas fa-check text-success me-2"></i>Ready for system login</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <a href="{{ url_for('create_user') }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i>Create Another User
+                        </a>
+                        <a href="{{ url_for('user_admin') }}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-users me-1"></i>Manage Users
+                        </a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary ms-2">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

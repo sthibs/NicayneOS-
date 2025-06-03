@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice Generator - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+    <div class="nmp-card">
+        <div class="nmp-card-header">Invoice Generator</div>
+        <div class="nmp-card-body">
+            <p style="margin-bottom: 30px; color: #666; font-size: 1.1rem;">Generate professional invoices with CWT and lot-based pricing support</p>
+
+            <form id="invoiceForm">
+                <!-- Step 1: Work Order Selection -->
+                <div class="form-section" style="margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="color: var(--primary-blue); margin-bottom: 15px;">Work Order Information</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer Name</label>
+                            <select name="customer_name" id="customerSelect" class="nmp-form-control" required onchange="loadCustomerWorkOrders()">
+                                <option value="">Select Customer</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Work Order Number</label>
+                            <select name="work_order_number" id="workOrderSelect" class="nmp-form-control" required onchange="loadWorkOrderDetails()">
+                                <option value="">Select Work Order</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Auto-filled Work Order Details -->
+                    <div id="workOrderDetails" style="display: none; margin-top: 20px; padding: 15px; background: white; border-radius: 6px; border: 1px solid #ddd;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div><strong>Customer PO:</strong> <span id="customerPO">-</span></div>
+                            <div><strong>BOL Number:</strong> <span id="bolNumber">-</span></div>
+                            <div><strong>Total Finished Tags:</strong> <span id="totalTags">-</span></div>
+                            <div><strong>Total Weight:</strong> <span id="totalWeight">-</span> lbs</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Pricing Method -->
+                <div class="form-section" style="margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="color: var(--primary-blue); margin-bottom: 15px;">Pricing Method</h3>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="pricing-option" style="padding: 15px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer;" onclick="selectPricingMethod('cwt')">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <input type="radio" name="pricing_method" value="cwt" id="cwtRadio" style="margin-right: 10px;">
+                                <label for="cwtRadio" style="font-weight: 600; cursor: pointer;">CWT Pricing (per 100 lbs)</label>
+                            </div>
+                            <div style="color: #666; font-size: 0.9rem;">Charge based on weight per hundredweight</div>
+                            <div id="cwtInputs" style="display: none; margin-top: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Rate per CWT ($)</label>
+                                <input type="number" name="cwt_rate" step="0.01" placeholder="e.g., 12.50" class="nmp-form-control">
+                            </div>
+                        </div>
+
+                        <div class="pricing-option" style="padding: 15px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer;" onclick="selectPricingMethod('lot')">
+                            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                <input type="radio" name="pricing_method" value="lot" id="lotRadio" style="margin-right: 10px;">
+                                <label for="lotRadio" style="font-weight: 600; cursor: pointer;">Lot Pricing (flat rate)</label>
+                            </div>
+                            <div style="color: #666; font-size: 0.9rem;">Fixed total amount for the entire job</div>
+                            <div id="lotInputs" style="display: none; margin-top: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Total Amount ($)</label>
+                                <input type="number" name="lot_amount" step="0.01" placeholder="e.g., 1500.00" class="nmp-form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Material Breakdown Preview -->
+                <div id="materialBreakdown" style="display: none; margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="color: var(--primary-blue); margin-bottom: 15px;">Material Breakdown</h3>
+                    <div id="materialTable"></div>
+                    <div id="pricingCalculation" style="margin-top: 20px; padding: 15px; background: white; border-radius: 6px; border: 1px solid #ddd;">
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.2rem; margin-bottom: 10px;"><strong>Subtotal: $<span id="subtotalAmount">0.00</span></strong></div>
+                            <div style="color: #666;">Tax: N/A</div>
+                            <div style="font-size: 1.4rem; color: var(--primary-blue); margin-top: 10px;"><strong>Total: $<span id="totalAmount">0.00</span></strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Additional Information -->
+                <div class="form-section" style="margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                    <h3 style="color: var(--primary-blue); margin-bottom: 15px;">Additional Information</h3>
+                    
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Invoice Notes (Optional)</label>
+                        <textarea name="invoice_notes" class="nmp-form-control" rows="3" placeholder="Special instructions, custom charges, or additional notes..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <div style="text-align: center;">
+                    <button type="submit" class="nmp-btn" style="padding: 15px 40px; font-size: 1.1rem;">
+                        Generate Invoice PDF
+                    </button>
+                </div>
+            </form>
+
+            <!-- Status Messages -->
+            <div id="statusMessage" style="display: none; margin-top: 20px; padding: 15px; border-radius: 8px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentWorkOrderData = null;
+let currentFinishedTags = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        generateInvoice();
+    });
+});
+
+function loadCustomerWorkOrders() {
+    const customerSelect = document.getElementById('customerSelect');
+    const workOrderSelect = document.getElementById('workOrderSelect');
+    const customer = customerSelect.value;
+    
+    // Clear work order dropdown
+    workOrderSelect.innerHTML = '<option value="">Select Work Order</option>';
+    document.getElementById('workOrderDetails').style.display = 'none';
+    document.getElementById('materialBreakdown').style.display = 'none';
+    
+    if (!customer) return;
+    
+    // Load work orders for selected customer
+    fetch(`/api/customer-work-orders?customer=${encodeURIComponent(customer)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.work_orders.length > 0) {
+                data.work_orders.forEach(wo => {
+                    const option = document.createElement('option');
+                    option.value = wo.work_order_number;
+                    option.textContent = `${wo.work_order_number} - PO#${wo.customer_po}`;
+                    workOrderSelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading work orders:', error);
+            showStatus('Error loading work orders', 'error');
+        });
+}
+
+function loadWorkOrderDetails() {
+    const workOrderNumber = document.getElementById('workOrderSelect').value;
+    if (!workOrderNumber) {
+        document.getElementById('workOrderDetails').style.display = 'none';
+        document.getElementById('materialBreakdown').style.display = 'none';
+        return;
+    }
+    
+    // Load work order details and finished tags
+    fetch(`/api/work-order-details?work_order=${encodeURIComponent(workOrderNumber)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                currentWorkOrderData = data.work_order;
+                currentFinishedTags = data.finished_tags;
+                
+                // Update UI with work order details
+                document.getElementById('customerPO').textContent = data.work_order.customer_po || '-';
+                document.getElementById('bolNumber').textContent = data.bol_number || '-';
+                document.getElementById('totalTags').textContent = data.finished_tags.length;
+                
+                const totalWeight = data.finished_tags.reduce((sum, tag) => sum + parseFloat(tag.weight || 0), 0);
+                document.getElementById('totalWeight').textContent = totalWeight.toFixed(2);
+                
+                document.getElementById('workOrderDetails').style.display = 'block';
+                
+                // Generate material breakdown
+                generateMaterialBreakdown();
+            } else {
+                showStatus('Error loading work order details', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading work order details:', error);
+            showStatus('Error loading work order details', 'error');
+        });
+}
+
+function selectPricingMethod(method) {
+    // Clear previous selections
+    document.querySelectorAll('.pricing-option').forEach(option => {
+        option.style.borderColor = '#ddd';
+        option.style.backgroundColor = 'transparent';
+    });
+    
+    document.querySelectorAll('input[name="pricing_method"]').forEach(radio => {
+        radio.checked = false;
+    });
+    
+    document.getElementById('cwtInputs').style.display = 'none';
+    document.getElementById('lotInputs').style.display = 'none';
+    
+    // Select new method
+    const selectedOption = event.currentTarget;
+    selectedOption.style.borderColor = 'var(--primary-blue)';
+    selectedOption.style.backgroundColor = '#f0f8ff';
+    
+    if (method === 'cwt') {
+        document.getElementById('cwtRadio').checked = true;
+        document.getElementById('cwtInputs').style.display = 'block';
+    } else {
+        document.getElementById('lotRadio').checked = true;
+        document.getElementById('lotInputs').style.display = 'block';
+    }
+    
+    // Recalculate pricing if we have data
+    updatePricingCalculation();
+}
+
+function generateMaterialBreakdown() {
+    if (!currentFinishedTags || currentFinishedTags.length === 0) return;
+    
+    // Group tags by material size
+    const sizeGroups = {};
+    currentFinishedTags.forEach(tag => {
+        const sizeKey = `${tag.thickness || 'N/A'} x ${tag.width || 'N/A'} x ${tag.length || 'N/A'}`;
+        if (!sizeGroups[sizeKey]) {
+            sizeGroups[sizeKey] = {
+                description: sizeKey,
+                pieces: 0,
+                weight: 0
+            };
+        }
+        sizeGroups[sizeKey].pieces += parseInt(tag.pieces || 1);
+        sizeGroups[sizeKey].weight += parseFloat(tag.weight || 0);
+    });
+    
+    // Generate table
+    let tableHTML = `
+        <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 6px; overflow: hidden;">
+            <thead style="background: var(--primary-blue); color: white;">
+                <tr>
+                    <th style="padding: 12px; text-align: left;">Material Description</th>
+                    <th style="padding: 12px; text-align: center;">Pieces</th>
+                    <th style="padding: 12px; text-align: center;">Weight (lbs)</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    Object.values(sizeGroups).forEach(group => {
+        tableHTML += `
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 12px;">${group.description}</td>
+                <td style="padding: 12px; text-align: center;">${group.pieces}</td>
+                <td style="padding: 12px; text-align: center;">${group.weight.toFixed(2)}</td>
+            </tr>
+        `;
+    });
+    
+    tableHTML += '</tbody></table>';
+    
+    document.getElementById('materialTable').innerHTML = tableHTML;
+    document.getElementById('materialBreakdown').style.display = 'block';
+}
+
+function updatePricingCalculation() {
+    const pricingMethod = document.querySelector('input[name="pricing_method"]:checked');
+    if (!pricingMethod || !currentFinishedTags) return;
+    
+    let subtotal = 0;
+    
+    if (pricingMethod.value === 'cwt') {
+        const rate = parseFloat(document.querySelector('input[name="cwt_rate"]').value || 0);
+        const totalWeight = currentFinishedTags.reduce((sum, tag) => sum + parseFloat(tag.weight || 0), 0);
+        subtotal = (totalWeight / 100) * rate;
+    } else if (pricingMethod.value === 'lot') {
+        subtotal = parseFloat(document.querySelector('input[name="lot_amount"]').value || 0);
+    }
+    
+    document.getElementById('subtotalAmount').textContent = subtotal.toFixed(2);
+    document.getElementById('totalAmount').textContent = subtotal.toFixed(2);
+}
+
+// Add event listeners for pricing inputs
+document.addEventListener('change', function(e) {
+    if (e.target.name === 'cwt_rate' || e.target.name === 'lot_amount') {
+        updatePricingCalculation();
+    }
+});
+
+function generateInvoice() {
+    const formData = new FormData(document.getElementById('invoiceForm'));
+    
+    // Validate form
+    if (!formData.get('customer_name') || !formData.get('work_order_number') || !formData.get('pricing_method')) {
+        showStatus('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    const pricingMethod = formData.get('pricing_method');
+    if (pricingMethod === 'cwt' && !formData.get('cwt_rate')) {
+        showStatus('Please enter CWT rate', 'error');
+        return;
+    }
+    
+    if (pricingMethod === 'lot' && !formData.get('lot_amount')) {
+        showStatus('Please enter lot amount', 'error');
+        return;
+    }
+    
+    // Add work order data to form
+    formData.append('work_order_data', JSON.stringify(currentWorkOrderData));
+    formData.append('finished_tags_data', JSON.stringify(currentFinishedTags));
+    
+    const submitButton = document.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.textContent = 'Generating Invoice...';
+    submitButton.disabled = true;
+    
+    showStatus('Generating invoice PDF...', 'info');
+    
+    fetch('/generate-invoice', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showStatus(`Invoice generated successfully! <a href="${data.download_url}" target="_blank" style="color: var(--primary-blue);">Download PDF</a>`, 'success');
+            if (data.drive_link) {
+                showStatus(data.message + ` <a href="${data.drive_link}" target="_blank" style="color: var(--primary-blue);">View in Drive</a>`, 'success');
+            }
+        } else {
+            showStatus(`Invoice generation failed: ${data.error}`, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error generating invoice:', error);
+        showStatus('Invoice generation failed. Please try again.', 'error');
+    })
+    .finally(() => {
+        submitButton.textContent = originalText;
+        submitButton.disabled = false;
+    });
+}
+
+function showStatus(message, type) {
+    const statusDiv = document.getElementById('statusMessage');
+    statusDiv.innerHTML = message;
+    statusDiv.className = type === 'success' ? 'alert-success' : 
+                         type === 'error' ? 'alert-error' : 'alert-info';
+    statusDiv.style.display = 'block';
+    
+    if (type === 'info') {
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 5000);
+    }
+}
+
+function loadCustomers() {
+    fetch('/work_orders.json')
+        .then(response => response.json())
+        .then(workOrders => {
+            const customers = [...new Set(workOrders.map(wo => wo.customer_name))].filter(name => name);
+            const customerSelect = document.getElementById('customerSelect');
+            
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer;
+                option.textContent = customer;
+                customerSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading customers:', error);
+            showStatus('Error loading customer data', 'error');
+        });
+}
+
+// Load customers when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadCustomers();
+});
+</script>
+
+<style>
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
+
+.form-section {
+    border-left: 4px solid var(--primary-blue);
+}
+
+.pricing-option:hover {
+    border-color: var(--primary-blue) !important;
+    background-color: #f0f8ff !important;
+}
+</style>
+{% endblock %}

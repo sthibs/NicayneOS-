@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOL Extractor - Nicayne OS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='nmp-style.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg nmp-navbar">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <strong>NICAYNE METAL PROCESSING</strong>
+                <small class="d-block">Powered by Chaos Operating System</small>
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a class="nav-link" href="{{ url_for('work_order_form') }}">Work Orders</a>
+                <a class="nav-link" href="{{ url_for('finished_tag') }}">Finished Tags</a>
+                <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="nmp-page-title">BOL Extractor</h2>
+                <p class="text-muted">Upload and process Bill of Lading PDF documents to extract coil data automatically</p>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Supplier Management Section -->
+                <div class="card mb-4">
+                    <div class="card-header nmp-card-header">
+                        <h5 class="mb-0">Supplier-Specific Processing</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3">Each supplier can have customized extraction prompts for optimal accuracy</p>
+                        
+                        <!-- Supplier Tabs -->
+                        <div class="mb-3">
+                            <h6>Active Suppliers</h6>
+                            <div id="supplier-list" class="d-flex gap-2 flex-wrap mb-3">
+                                <!-- Supplier tabs will appear here -->
+                            </div>
+                        </div>
+                        
+                        <!-- Selected Supplier Prompt Management -->
+                        <div id="supplier-prompt-section" class="p-3 bg-light rounded">
+                            <h6>Prompt for: <span id="current-supplier-name">Default Supplier</span></h6>
+                            <textarea id="supplier-prompt" class="form-control mb-2" rows="6" 
+                                    placeholder="Enter custom extraction prompt for this supplier..." 
+                                    style="font-family: monospace; font-size: 12px;"></textarea>
+                            <div class="d-flex gap-2">
+                                <button onclick="saveSupplierPrompt()" class="btn btn-success btn-sm">Save Prompt</button>
+                                <button onclick="resetToDefaultPrompt()" class="btn btn-secondary btn-sm">Reset to Default</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Add New Supplier -->
+                        <div class="mt-3 p-3 bg-secondary bg-opacity-10 rounded">
+                            <h6>Add New Supplier</h6>
+                            <div class="input-group">
+                                <input type="text" id="new-supplier-name" class="form-control" placeholder="Enter supplier name">
+                                <button onclick="addSupplier()" class="btn btn-primary">Add Supplier</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upload Section -->
+                <div class="card mb-4">
+                    <div class="card-header nmp-card-header">
+                        <h5 class="mb-0">Upload BOL PDF</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Selected Supplier: <strong><span id="selected-supplier">Default Supplier</span></strong></p>
+                        <form method="POST" action="/upload" enctype="multipart/form-data" class="upload-form">
+                            <input type="hidden" id="supplier-input" name="supplier" value="default">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="file" class="form-label">Select PDF File</label>
+                                        <input type="file" class="form-control" id="file" name="file" accept=".pdf" required>
+                                        <div class="form-text">Maximum file size: 16MB</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 d-flex align-items-end">
+                                    <button type="submit" class="btn nmp-btn-primary btn-lg w-100">
+                                        <i class="fas fa-upload me-2"></i>Process BOL
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Processing Status -->
+                <div class="card mb-4" id="processing-status" style="display: none;">
+                    <div class="card-header nmp-card-header">
+                        <h5 class="mb-0">Processing Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="progress mb-3">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <div id="status-messages">
+                            <p class="mb-1">Initializing extraction process...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Extractions -->
+                <div class="card">
+                    <div class="card-header nmp-card-header">
+                        <h5 class="mb-0">Recent Extractions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>File Name</th>
+                                        <th>Supplier</th>
+                                        <th>Coils Extracted</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-extractions">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted">No recent extractions available</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Section -->
+                <div class="card mt-4">
+                    <div class="card-header nmp-card-header">
+                        <h5 class="mb-0">How to Use BOL Extractor</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>Step 1: Upload PDF</h6>
+                                <p class="small">Select your Bill of Lading PDF file. The system supports files up to 16MB.</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Step 2: Processing</h6>
+                                <p class="small">The AI system will automatically extract coil data including weights, dimensions, and heat numbers.</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Step 3: Review Results</h6>
+                                <p class="small">Extracted data is automatically saved to Google Sheets for inventory management.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let suppliers = {};
+        let currentSupplier = 'default';
+
+        // Load suppliers from API
+        function loadSuppliers() {
+            fetch('/suppliers')
+                .then(response => response.json())
+                .then(data => {
+                    suppliers = data;
+                    renderSupplierList();
+                    // Select default supplier initially
+                    if (suppliers['default']) {
+                        selectSupplier('default');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading suppliers:', error);
+                });
+        }
+
+        // Render supplier tabs
+        function renderSupplierList() {
+            const listContainer = document.getElementById('supplier-list');
+            if (!listContainer) return;
+
+            const supplierKeys = Object.keys(suppliers);
+            
+            if (supplierKeys.length === 0) {
+                listContainer.innerHTML = '<div class="text-muted">No suppliers configured</div>';
+                return;
+            }
+
+            const tabsHtml = supplierKeys.map(key => {
+                const supplier = suppliers[key];
+                const isActive = key === currentSupplier ? 'active' : '';
+                return `
+                    <button class="btn btn-outline-primary btn-sm supplier-tab ${isActive}" 
+                            onclick="selectSupplier('${key}')" data-supplier="${key}">
+                        ${supplier.name}
+                        ${key !== 'default' ? '<span class="ms-2 text-danger" onclick="event.stopPropagation(); removeSupplier(\'' + key + '\')" style="cursor: pointer;">×</span>' : ''}
+                    </button>
+                `;
+            }).join('');
+
+            listContainer.innerHTML = tabsHtml;
+        }
+
+        // Select a supplier
+        function selectSupplier(key) {
+            currentSupplier = key;
+            document.getElementById('selected-supplier').textContent = suppliers[key].name;
+            document.getElementById('supplier-input').value = key;
+            document.getElementById('current-supplier-name').textContent = suppliers[key].name;
+            document.getElementById('supplier-prompt').value = suppliers[key].prompt || '';
+            renderSupplierList(); // Re-render to update selection
+        }
+
+        // Add new supplier
+        function addSupplier() {
+            const nameInput = document.getElementById('new-supplier-name');
+            const name = nameInput.value.trim().toUpperCase();
+            
+            if (!name) {
+                alert('Please enter a supplier name');
+                return;
+            }
+            
+            fetch('/suppliers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    nameInput.value = '';
+                    loadSuppliers(); // Reload the list
+                } else {
+                    alert('Failed to add supplier: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error adding supplier');
+                console.error(error);
+            });
+        }
+
+        // Remove supplier
+        function removeSupplier(key) {
+            if (key === 'default') return;
+            
+            if (confirm(`Remove supplier ${suppliers[key].name}?`)) {
+                fetch(`/suppliers/${key}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (currentSupplier === key) {
+                            selectSupplier('default');
+                        }
+                        loadSuppliers(); // Reload the list
+                    } else {
+                        alert('Failed to remove supplier');
+                    }
+                })
+                .catch(error => {
+                    alert('Error removing supplier');
+                    console.error(error);
+                });
+            }
+        }
+
+        // Save supplier prompt
+        function saveSupplierPrompt() {
+            const prompt = document.getElementById('supplier-prompt').value.trim();
+            
+            if (!prompt) {
+                alert('Please enter a prompt before saving');
+                return;
+            }
+
+            fetch(`/suppliers/${currentSupplier}/prompt`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Prompt saved successfully!');
+                    suppliers[currentSupplier].prompt = prompt; // Update local cache
+                } else {
+                    alert('Failed to save prompt: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error saving prompt');
+                console.error(error);
+            });
+        }
+
+        // Reset to default prompt
+        function resetToDefaultPrompt() {
+            const defaultPrompt = suppliers['default'].prompt || 'Extract BOL data with standard field mapping. Focus on accuracy and completeness of all fields.';
+            document.getElementById('supplier-prompt').value = defaultPrompt;
+        }
+
+        // Show processing status when form is submitted
+        document.querySelector('.upload-form').addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('file');
+            if (!fileInput.files.length) {
+                e.preventDefault();
+                alert('Please select a PDF file first');
+                return;
+            }
+            
+            // Show processing status
+            document.getElementById('processing-status').style.display = 'block';
+            
+            // Disable the submit button
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Processing...';
+            
+            // Show progress updates
+            let progress = 0;
+            const progressBar = document.querySelector('.progress-bar');
+            const statusMessages = document.getElementById('status-messages');
+            
+            const messages = [
+                'Uploading PDF file...',
+                'Analyzing document structure...',
+                'Extracting coil data with AI...',
+                'Processing with supplier-specific prompts...',
+                'Saving to Google Sheets...',
+                'Finalizing...'
+            ];
+            
+            const interval = setInterval(() => {
+                progress += 15;
+                if (progress > 90) progress = 90; // Don't complete until actual completion
+                
+                progressBar.style.width = progress + '%';
+                
+                const messageIndex = Math.floor(progress / 15) - 1;
+                if (messageIndex >= 0 && messageIndex < messages.length) {
+                    statusMessages.innerHTML = '<p class="mb-1"><i class="fas fa-cog fa-spin me-2"></i>' + messages[messageIndex] + '</p>';
+                }
+            }, 2000);
+            
+            // Store interval ID to clear it later if needed
+            this.progressInterval = interval;
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSuppliers();
+        });
+    </script>
+</body>
+</html>

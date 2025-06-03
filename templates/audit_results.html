@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice Integrity Audit - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+    <div class="nmp-card">
+        <div class="nmp-card-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Invoice Data Integrity Audit Results</span>
+                <button onclick="runNewAudit()" class="nmp-btn" style="padding: 8px 16px; font-size: 0.9rem;">
+                    🔄 Run New Audit
+                </button>
+            </div>
+        </div>
+        <div class="nmp-card-body">
+            <!-- Audit Summary -->
+            <div style="margin-bottom: 30px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div style="padding: 20px; background: {% if report.summary.data_integrity_status == 'PASS' %}#d4edda{% else %}#f8d7da{% endif %}; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: {% if report.summary.data_integrity_status == 'PASS' %}#155724{% else %}#721c24{% endif %};">
+                            {{ report.summary.data_integrity_status }}
+                        </div>
+                        <div style="color: #666; font-size: 0.9rem;">Overall Status</div>
+                    </div>
+                    <div style="padding: 20px; background: white; border-radius: 8px; border-left: 4px solid var(--primary-blue); text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-blue);">
+                            {{ report.summary.total_errors }}
+                        </div>
+                        <div style="color: #666; font-size: 0.9rem;">Errors Found</div>
+                    </div>
+                    <div style="padding: 20px; background: white; border-radius: 8px; border-left: 4px solid #ffc107; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #ffc107;">
+                            {{ report.summary.total_warnings }}
+                        </div>
+                        <div style="color: #666; font-size: 0.9rem;">Warnings</div>
+                    </div>
+                    <div style="padding: 20px; background: white; border-radius: 8px; border-left: 4px solid #28a745; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: #28a745;">
+                            {{ report.audit_timestamp[:19].replace('T', ' ') }}
+                        </div>
+                        <div style="color: #666; font-size: 0.9rem;">Audit Time</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Statistics -->
+            {% if report.results %}
+            <div style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px; color: var(--primary-blue);">📊 Invoice Statistics</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                        <h4 style="margin: 0 0 10px 0; color: #333;">Record Counts</h4>
+                        <div style="margin-bottom: 8px;">Total Records: <strong>{{ report.results.total_records or 0 }}</strong></div>
+                        <div style="margin-bottom: 8px;">Valid Records: <strong>{{ report.results.valid_records or 0 }}</strong></div>
+                        <div>Invalid Records: <strong>{{ report.results.invalid_records or 0 }}</strong></div>
+                    </div>
+                    <div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                        <h4 style="margin: 0 0 10px 0; color: #333;">Financial Totals</h4>
+                        <div style="margin-bottom: 8px;">Total Invoices: <strong>{{ report.results.total_invoices or 0 }}</strong></div>
+                        <div style="margin-bottom: 8px;">Total Value: <strong>${{ "%.2f"|format(report.results.total_value or 0) }}</strong></div>
+                        <div>Avg Invoice: <strong>${{ "%.2f"|format((report.results.total_value or 0) / (report.results.total_invoices or 1)) }}</strong></div>
+                    </div>
+                    <div style="padding: 20px; background: #f8f9fa; border-radius: 8px;">
+                        <h4 style="margin: 0 0 10px 0; color: #333;">Current Month</h4>
+                        <div style="margin-bottom: 8px;">Month Invoices: <strong>{{ report.results.current_month_invoices or 0 }}</strong></div>
+                        <div>Month Value: <strong>${{ "%.2f"|format(report.results.current_month_value or 0) }}</strong></div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Dashboard Comparison -->
+            {% if report.results.dashboard_comparison %}
+            <div style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px; color: var(--primary-blue);">🔍 Dashboard Accuracy Check</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                        <thead style="background: var(--primary-blue); color: white;">
+                            <tr>
+                                <th style="padding: 15px; text-align: left;">Metric</th>
+                                <th style="padding: 15px; text-align: center;">Audit Value</th>
+                                <th style="padding: 15px; text-align: center;">Dashboard Value</th>
+                                <th style="padding: 15px; text-align: center;">Match Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 12px; font-weight: 600;">Total Count</td>
+                                <td style="padding: 12px; text-align: center;">{{ report.results.dashboard_comparison.audit_total }}</td>
+                                <td style="padding: 12px; text-align: center;">{{ report.results.dashboard_comparison.dashboard_total }}</td>
+                                <td style="padding: 12px; text-align: center;">
+                                    {% if report.results.dashboard_comparison.matches.total_count_match %}
+                                        <span style="color: #28a745; font-weight: bold;">✓ MATCH</span>
+                                    {% else %}
+                                        <span style="color: #dc3545; font-weight: bold;">✗ MISMATCH</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 12px; font-weight: 600;">Total Value</td>
+                                <td style="padding: 12px; text-align: center;">${{ "%.2f"|format(report.results.dashboard_comparison.audit_value) }}</td>
+                                <td style="padding: 12px; text-align: center;">${{ "%.2f"|format(report.results.dashboard_comparison.dashboard_value) }}</td>
+                                <td style="padding: 12px; text-align: center;">
+                                    {% if report.results.dashboard_comparison.matches.total_value_match %}
+                                        <span style="color: #28a745; font-weight: bold;">✓ MATCH</span>
+                                    {% else %}
+                                        <span style="color: #dc3545; font-weight: bold;">✗ MISMATCH</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 12px; font-weight: 600;">Month Count</td>
+                                <td style="padding: 12px; text-align: center;">{{ report.results.dashboard_comparison.audit_month_count }}</td>
+                                <td style="padding: 12px; text-align: center;">{{ report.results.dashboard_comparison.dashboard_month_count }}</td>
+                                <td style="padding: 12px; text-align: center;">
+                                    {% if report.results.dashboard_comparison.matches.month_count_match %}
+                                        <span style="color: #28a745; font-weight: bold;">✓ MATCH</span>
+                                    {% else %}
+                                        <span style="color: #dc3545; font-weight: bold;">✗ MISMATCH</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; font-weight: 600;">Month Value</td>
+                                <td style="padding: 12px; text-align: center;">${{ "%.2f"|format(report.results.dashboard_comparison.audit_month_value) }}</td>
+                                <td style="padding: 12px; text-align: center;">${{ "%.2f"|format(report.results.dashboard_comparison.dashboard_month_value) }}</td>
+                                <td style="padding: 12px; text-align: center;">
+                                    {% if report.results.dashboard_comparison.matches.month_value_match %}
+                                        <span style="color: #28a745; font-weight: bold;">✓ MATCH</span>
+                                    {% else %}
+                                        <span style="color: #dc3545; font-weight: bold;">✗ MISMATCH</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Customer Breakdown -->
+            {% if report.results.customer_breakdown %}
+            <div style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px; color: var(--primary-blue);">👥 Customer Breakdown</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                        <thead style="background: #f8f9fa;">
+                            <tr>
+                                <th style="padding: 12px; text-align: left;">Customer</th>
+                                <th style="padding: 12px; text-align: center;">Invoice Count</th>
+                                <th style="padding: 12px; text-align: right;">Total Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for customer, stats in report.results.customer_breakdown.items() %}
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 12px; font-weight: 600;">{{ customer }}</td>
+                                <td style="padding: 12px; text-align: center;">{{ stats.count }}</td>
+                                <td style="padding: 12px; text-align: right; font-family: monospace;">${{ "%.2f"|format(stats.value) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Errors and Warnings -->
+            {% if report.errors or report.warnings %}
+            <div style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px; color: var(--primary-blue);">🚨 Issues Found</h3>
+                
+                {% if report.errors %}
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #dc3545; margin-bottom: 10px;">Errors</h4>
+                    {% for error in report.errors %}
+                    <div style="padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px; margin-bottom: 8px; color: #721c24;">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if report.warnings %}
+                <div>
+                    <h4 style="color: #856404; margin-bottom: 10px;">Warnings</h4>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        {% for warning in report.warnings %}
+                        <div style="padding: 8px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; margin-bottom: 6px; color: #856404; font-size: 0.9rem;">
+                            {{ warning }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- File Integrity -->
+            {% if report.results.file_integrity %}
+            <div style="margin-bottom: 30px;">
+                <h3 style="margin-bottom: 20px; color: var(--primary-blue);">📁 File Integrity Check</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                    <div style="padding: 15px; background: #d4edda; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.3rem; font-weight: bold; color: #155724;">{{ report.results.file_integrity.found }}</div>
+                        <div style="color: #155724; font-size: 0.9rem;">PDFs Found</div>
+                    </div>
+                    <div style="padding: 15px; background: #f8d7da; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.3rem; font-weight: bold; color: #721c24;">{{ report.results.file_integrity.missing }}</div>
+                        <div style="color: #721c24; font-size: 0.9rem;">PDFs Missing</div>
+                    </div>
+                    <div style="padding: 15px; background: #fff3cd; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 1.3rem; font-weight: bold; color: #856404;">{{ report.results.file_integrity.invalid_path }}</div>
+                        <div style="color: #856404; font-size: 0.9rem;">Invalid Paths</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="/invoices" class="nmp-btn" style="margin-right: 10px;">View Invoice Dashboard</a>
+                <button onclick="downloadReport()" class="nmp-btn" style="background: #6c757d;">Download Report</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function runNewAudit() {
+    if (confirm('Run a new audit? This may take a few moments.')) {
+        window.location.reload();
+    }
+}
+
+function downloadReport() {
+    fetch('/api/audit-invoice-integrity')
+        .then(response => response.json())
+        .then(data => {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `invoice_audit_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        })
+        .catch(error => {
+            alert('Error downloading report: ' + error.message);
+        });
+}
+</script>
+{% endblock %}

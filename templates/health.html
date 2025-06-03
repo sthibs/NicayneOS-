@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}System Health Check - Nicayne Metal Processing OS{% endblock %}
+
+{% block content %}
+    <div class="nmp-card">
+        <div class="nmp-card-header">System Health Check</div>
+        <div class="nmp-card-body">
+            <p style="margin-bottom: 30px; color: #666; font-size: 1.1rem;">Real-time System Status and Connectivity</p>
+
+            <!-- Overall Status -->
+            <div style="text-align: center; margin-bottom: 40px;">
+                {% if health.status == 'healthy' %}
+                    <div style="display: inline-flex; align-items: center; background: #d4edda; color: #155724; padding: 20px 30px; border-radius: 50px; border: 2px solid #c3e6cb; font-size: 1.2rem; font-weight: 600;">
+                        <span style="font-size: 1.5rem; margin-right: 15px;">✓</span>
+                        System Status: Healthy
+                    </div>
+                {% else %}
+                    <div style="display: inline-flex; align-items: center; background: #f8d7da; color: #721c24; padding: 20px 30px; border-radius: 50px; border: 2px solid #f5c6cb; font-size: 1.2rem; font-weight: 600;">
+                        <span style="font-size: 1.5rem; margin-right: 15px;">✗</span>
+                        System Status: Unhealthy
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Service Status Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <!-- Google Sheets Status -->
+                <div style="background: #f8fafe; padding: 25px; border-radius: 8px; border: 1px solid var(--steel-gray);">
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        {% if health.google_sheets == 'connected' %}
+                            <span style="color: var(--success-green); font-size: 1.5rem; margin-right: 15px;">✓</span>
+                            <h3 style="color: var(--primary-blue); margin: 0;">Google Sheets</h3>
+                        {% else %}
+                            <span style="color: #dc3545; font-size: 1.5rem; margin-right: 15px;">✗</span>
+                            <h3 style="color: #dc3545; margin: 0;">Google Sheets</h3>
+                        {% endif %}
+                    </div>
+                    <div style="font-size: 14px; color: #666;">
+                        <div><strong>Status:</strong> {{ health.google_sheets|title }}</div>
+                        <div><strong>Service:</strong> Nicayne System Sheet</div>
+                        <div><strong>Function:</strong> Inventory Management</div>
+                    </div>
+                </div>
+
+                <!-- OpenAI API Status -->
+                <div style="background: #f8fafe; padding: 25px; border-radius: 8px; border: 1px solid var(--steel-gray);">
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        {% if health.openai_api == 'configured' %}
+                            <span style="color: var(--success-green); font-size: 1.5rem; margin-right: 15px;">✓</span>
+                            <h3 style="color: var(--primary-blue); margin: 0;">OpenAI API</h3>
+                        {% else %}
+                            <span style="color: #dc3545; font-size: 1.5rem; margin-right: 15px;">✗</span>
+                            <h3 style="color: #dc3545; margin: 0;">OpenAI API</h3>
+                        {% endif %}
+                    </div>
+                    <div style="font-size: 14px; color: #666;">
+                        <div><strong>Status:</strong> {{ health.openai_api|title }}</div>
+                        <div><strong>Model:</strong> GPT-4o</div>
+                        <div><strong>Function:</strong> Document Processing</div>
+                    </div>
+                </div>
+
+                <!-- Flask Application -->
+                <div style="background: #f8fafe; padding: 25px; border-radius: 8px; border: 1px solid var(--steel-gray);">
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <span style="color: var(--success-green); font-size: 1.5rem; margin-right: 15px;">✓</span>
+                        <h3 style="color: var(--primary-blue); margin: 0;">Flask Server</h3>
+                    </div>
+                    <div style="font-size: 14px; color: #666;">
+                        <div><strong>Status:</strong> Running</div>
+                        <div><strong>Port:</strong> 5000</div>
+                        <div><strong>Function:</strong> Web Application</div>
+                    </div>
+                </div>
+
+                <!-- File System -->
+                <div style="background: #f8fafe; padding: 25px; border-radius: 8px; border: 1px solid var(--steel-gray);">
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <span style="color: var(--success-green); font-size: 1.5rem; margin-right: 15px;">✓</span>
+                        <h3 style="color: var(--primary-blue); margin: 0;">File System</h3>
+                    </div>
+                    <div style="font-size: 14px; color: #666;">
+                        <div><strong>Status:</strong> Accessible</div>
+                        <div><strong>Storage:</strong> Local + Drive</div>
+                        <div><strong>Function:</strong> Document Storage</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Details (if any) -->
+            {% if health.error %}
+                <div style="background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                    <h3 style="color: #721c24; margin-bottom: 15px;">Error Details</h3>
+                    <pre style="background: #fff; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: monospace; font-size: 14px;">{{ health.error }}</pre>
+                </div>
+            {% endif %}
+
+            <!-- System Information -->
+            <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid var(--steel-gray);">
+                <h3 style="color: var(--primary-blue); margin-bottom: 20px;">System Information</h3>
+                <div style="background: #f8fafe; padding: 20px; border-radius: 8px; border: 1px solid var(--steel-gray);">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; font-family: monospace; font-size: 14px;">
+                        <div><strong>Application:</strong> Nicayne Metal Processing OS</div>
+                        <div><strong>Version:</strong> 1.0.0</div>
+                        <div><strong>Environment:</strong> Production</div>
+                        <div><strong>Last Check:</strong> Just now</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Refresh Button -->
+            <div style="text-align: center; margin-top: 30px;">
+                <button onclick="window.location.reload()" class="nmp-btn">Refresh Status</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh every 30 seconds
+        setTimeout(function() {
+            window.location.reload();
+        }, 30000);
+    </script>
+{% endblock %}
