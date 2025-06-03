@@ -1,0 +1,51 @@
+✅ GOAL:
+# Build a Bill of Lading (BOL) Viewer page in the Nicayne OS dashboard.
+# This tool allows staff to:
+# - Browse all previously generated BOLs
+# - View key details (PO, BOL #, date, customer, total bundles, total weight)
+# - Re-download the PDF from Google Drive
+
+# ✅ ROUTE:
+# /bol-history (or /bol-viewer)
+
+# ✅ UI REQUIREMENTS (HTML or React):
+# - Top section with dropdowns:
+#   [Customer Name] ⬇️ [PO Number] ⬇️ [Load BOLs] 🔄
+# - BOL Table:
+#   | BOL Number | Work Order # | Date | Total Bundles | Total Weight | Actions |
+#   - Download PDF (link to Google Drive)
+#   - Optional: "View Summary" (popup or expandable row showing tag info)
+
+# ✅ BACKEND FUNCTIONALITY:
+# - Use service account to locate correct folder:
+#   Chaos > Clients > Nicayne Metal Processing - Chaos > Customers > [Customer] > PO#[Number]
+# - Look for files named: NMP-BOL-[DATE]-BL######.pdf
+# - Parse filename or local JSON index to extract:
+#   - BOL Number
+#   - Work Order #
+#   - Date created
+#   - Total bundle count and weight (from previous metadata if available)
+# - Display this data in a searchable, paginated table
+# - Sort by date (most recent first)
+
+# ✅ FEATURES:
+# - “Download PDF” button next to each record
+# - Optional: "Export table to CSV"
+# - Color-coded status if you later add delivery confirmation
+
+# ✅ VISUAL STYLE:
+# - Match Nicayne OS color palette: Navy (#00203F), Light Gray (#F2F2F2), Blue accents (#005baa)
+# - Full-width table with hover effects
+# - Use badge-style pill indicators for BOL number
+
+# ✅ OPTIONAL:
+# - Implement lightweight search bar for BOL number, customer, PO, etc.
+# - Add summary banner showing “X BOLs found for PO#23456 (Total: 15,400 lbs)”
+
+# ✅ DATA SOURCE:
+# - Pull metadata from local `BOL_HISTORY.json` or from a Google Sheet (FINISHED_TAGS or BOL_HISTORY)
+# - PDFs must be linked to their proper Google Drive URLs for download
+
+# ✅ FUTURE ADD-ONS:
+# - Clicking a BOL entry opens the associated work order and finished tags
+# - Add “Signed Copy Upload” to attach final version from truck driver

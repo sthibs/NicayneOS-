@@ -1,0 +1,102 @@
+CHUNK 4 – Finished Tag PDF Generation
+🎯 Goal:
+After the operator submits a Finished Tag form:
+
+Generate a printable PDF
+
+Include all required fields (with clean layout)
+
+Auto-save the PDF for later download
+
+Support one-click download and reprint
+
+🧱 Step 1: Install Required Package
+Ensure this is at the top of your Replit shell or replit.nix:
+
+bash
+Copy
+Edit
+pip install reportlab
+🧾 Step 2: Add generate_finished_tag_pdf.py
+Create a new file:
+
+python
+Copy
+Edit
+# generate_finished_tag_pdf.py
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from datetime import datetime
+import os
+
+def generate_finished_tag_pdf(data):
+    tag_id = data.get("tag_id", "UNKNOWN_TAG")
+    pdf_path = f"pdf_outputs/finished_tag_{tag_id}.pdf"
+
+    os.makedirs("pdf_outputs", exist_ok=True)
+
+    c = canvas.Canvas(pdf_path, pagesize=letter)
+    width, height = letter
+
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(50, height - 50, "NMP FINISHED TAG")
+
+    c.setFont("Helvetica", 10)
+    c.drawString(50, height - 80, f"Date: {data.get('date', '')}")
+    c.drawString(350, height - 80, f"Tag #: {tag_id}")
+
+    c.drawString(50, height - 100, f"Customer: {data.get('customer_name', '')}")
+    c.drawString(350, height - 100, f"PO #: {data.get('po_number', '')}")
+
+    c.drawString(50, height - 130, f"Material Grade: {data.get('material_grade', '')}")
+    c.drawString(50, height - 150, f"Description: {data.get('material_description', '')}")
+    c.drawString(50, height - 170, f"Pieces: {data.get('pieces', '')}")
+    c.drawString(200, height - 170, f"Weight: {data.get('finished_weight', '')}")
+    c.drawString(350, height - 170, f"Heat #: {data.get('heat_number', '')}")
+
+    c.drawString(50, height - 200, f"Operator Initials: {data.get('operator_initials', '')}")
+    c.drawString(250, height - 200, f"Incoming Tags: {data.get('incoming_tags', '')}")
+
+    c.showPage()
+    c.save()
+
+    return pdf_path
+🧱 Step 3: Update main.py Submit Route
+Inside the /finished-tag POST route, after writing to Google Sheets and moving coils, add:
+
+python
+Copy
+Edit
+from generate_finished_tag_pdf import generate_finished_tag_pdf
+
+# Generate and store the tag PDF
+pdf_path = generate_finished_tag_pdf(form)
+print(f"Finished Tag PDF created at: {pdf_path}")
+🧱 Step 4: Add Route to Download PDF
+In main.py, add this:
+
+python
+Copy
+Edit
+@app.route("/download-finished-tag/<tag_id>")
+def download_finished_tag(tag_id):
+    path = f"pdf_outputs/finished_tag_{tag_id}.pdf"
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True)
+    return "PDF not found", 404
+🖨️ Optional: Add Download Link to Confirmation Page
+Update your confirmation or history UI to include a button like:
+
+html
+Copy
+Edit
+<a href="/download-finished-tag/{{ tag_id }}" target="_blank">Download Tag PDF</a>
+✅ Results:
+Submitting a Finished Tag creates a printable PDF version
+
+PDF saved on server in /pdf_outputs/
+
+Operator can download and print directly
+
+Compatible with standard and Dymo printers
+

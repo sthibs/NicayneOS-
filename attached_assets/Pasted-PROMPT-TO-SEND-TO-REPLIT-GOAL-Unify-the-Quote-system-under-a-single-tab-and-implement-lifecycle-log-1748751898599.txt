@@ -1,0 +1,78 @@
+PROMPT TO SEND TO REPLIT
+GOAL:
+Unify the Quote system under a single tab and implement lifecycle logic that tracks the status of each quote (active, inactive, realized) with real-time linkage to the work order system.
+
+🔧 ACTION ITEMS:
+1. Merge Quote Generator Into Quotes Tab
+Eliminate the separate “Quote Generator” tab
+
+Move the entire form and interface into the “Quotes” tab
+
+The Quotes tab should now contain:
+
+Quote submission form (slitting, cut-to-length, general info)
+
+Quote extractor (on the same screen)
+
+Add item functionality
+
+Auto-calculated fields (PIW, OD, piece count, etc.)
+
+2. Create a Quote Dashboard View (within Quotes tab)
+Add a section above or beside the quote form called Quote Dashboard
+
+Display a dynamic table showing the most recent 30 days of submitted quotes (fetched from the Google Sheet)
+
+Each row should include:
+
+Quote #
+
+Date Submitted
+
+Customer Name
+
+Job Type (Slitting / CTL / Both)
+
+PO (blank unless quote has been realized)
+
+Status (Active, Inactive, or Realized)
+
+[Optional] Link to uploaded quote or extracted data
+
+3. Quote Lifecycle Logic
+When a new quote is submitted, store it as Active and display it on the dashboard.
+
+If no PO is received within 30 days, mark the quote as Inactive and remove it from the dashboard (but store it on the Google Sheet).
+
+When a work order is generated and includes a reference to a Quote #, update that quote’s status to Realized.
+
+4. Google Sheets Integration
+Continue logging every quote to the Nicayne System Sheet – Quotes Tab
+
+Add a new column for:
+
+Status (Active / Inactive / Realized)
+
+Linked Work Order # (auto-filled when matched)
+
+PO # (added when known)
+
+Create a cleanup routine:
+
+Any quote older than 30 days with no linked PO or work order is marked Inactive but still saved on the sheet
+
+5. Visual Behavior in Dashboard
+Show only Active and Realized quotes from the last 30 days in the dashboard
+
+Clicking on a row can show expanded quote details (e.g. slitting specs, CTL specs, pricing model)
+
+Include a toggle to “Show Inactive Quotes” if desired
+
+6. Future-Proofing Hooks (optional for later)
+Mark when a customer uploads a PO and link it back to a quote using quote ID
+
+Later we can use that link to:
+
+Trigger automatic work order generation
+
+Archive the quote once the job is completed

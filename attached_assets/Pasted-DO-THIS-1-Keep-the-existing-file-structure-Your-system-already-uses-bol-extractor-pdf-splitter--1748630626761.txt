@@ -1,0 +1,67 @@
+DO THIS:
+1. Keep the existing file structure:
+Your system already uses:
+
+bol_extractor/pdf_splitter.py (✅ good)
+
+bol_extractor/ocr_utils.py (✅ already handles text extraction)
+
+bol_extractor/llm_refiner.py (✅ runs OpenAI/DeepSeek logic)
+
+You don’t need to create new files like split_pdf_by_page or ocr_reader. Instead:
+
+2. Update these files with better logic:
+File	What to Add/Update
+pdf_splitter.py	Make sure it splits and saves pages cleanly with unique filenames (you’re good here)
+ocr_utils.py	Improve text cleanup if needed. Otherwise, leave it.
+llm_refiner.py	Replace prompt logic with the new prompt you’ve built (from Chunk 4). Also integrate the new parsing logic that skips empty coils.
+
+3. No need to rename or create new module paths.
+This is important: just drop your improved logic into existing files. That way:
+
+You keep the working web uploader and Drive integration
+
+You only enhance what needs enhancing: LLM prompt quality and JSON parsing
+
+✍️ For example, in llm_refiner.py:
+Replace your current OpenAI/DeepSeek call block with this logic (from Chunk 4):
+
+python
+Copy
+Edit
+# In llm_refiner.py
+
+def run_extraction_with_fallback(text: str, prompt_prefix: str = ""):
+    full_prompt = f"{prompt_prefix}\n\n{text}"
+    
+    try:
+        return call_openai(full_prompt)
+    except:
+        return call_deepseek(full_prompt)
+
+def parse_rows(raw_response):
+    try:
+        data = json.loads(raw_response)
+        return [row for row in data if row.get("coil_tag")]  # Only rows with coil_tag
+    except:
+        return []
+And update your process_pages() function to loop through all pages and combine the results like this:
+
+python
+Copy
+Edit
+all_rows = []
+
+for page in pages:
+    text = extract_text(page)
+    response = run_extraction_with_fallback(text, supplier_prompt)
+    rows = parse_rows(response)
+    all_rows.extend(rows)
+💡 Why This Is the Best Option
+✅ Keeps your working front end, uploader, and Google connections
+
+✅ Lets you keep scaling with Drive automation
+
+✅ Avoids folder/module confusion
+
+✅ Adds the more accurate logic you're building without breaking anything

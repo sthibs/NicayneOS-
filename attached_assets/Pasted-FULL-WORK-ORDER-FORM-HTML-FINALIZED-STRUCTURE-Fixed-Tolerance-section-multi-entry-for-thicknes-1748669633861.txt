@@ -1,0 +1,163 @@
+FULL WORK ORDER FORM HTML (FINALIZED STRUCTURE)
+✅ Fixed: Tolerance section (multi-entry for thickness, width, length)
+
+✅ Fixed: CTL job form (no OD/PIW)
+
+✅ Fixed: Slitting job form (includes OD & PIW)
+
+✅ ✅ Responsive, compact layout
+
+🧩 Ready to plug into your Flask route at /work-order-form
+
+📄 templates/work_order_form.html
+Replace the full content of your work_order_form.html with the following:
+
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nicayne Work Order Form</title>
+  <style>
+    body { font-family: sans-serif; background: #f5f5f5; padding: 40px; }
+    h1 { text-align: center; }
+    form { background: white; padding: 30px; border-radius: 10px; max-width: 1000px; margin: auto; }
+    .section { margin-bottom: 30px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input[type="text"], input[type="date"], select, textarea {
+      width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc;
+    }
+    textarea { height: 100px; }
+    .flex-row { display: flex; gap: 20px; }
+    .flex-col { flex: 1; }
+    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <h1>🧾 Nicayne Work Order Form</h1>
+  <form method="POST" action="/work-order-form">
+
+    <!-- GENERAL JOB INFO -->
+    <div class="section">
+      <h2>General Job Info</h2>
+      <div class="flex-row">
+        <div class="flex-col"><label>Work Order #</label><input type="text" name="work_order_number" readonly value="AUTO-GENERATED"></div>
+        <div class="flex-col"><label>Quote Number</label><input type="text" name="quote_number"></div>
+        <div class="flex-col"><label>Customer Name</label><input type="text" name="customer_name"></div>
+      </div>
+      <div class="flex-row">
+        <div class="flex-col"><label>Customer PO</label><input type="text" name="customer_po"></div>
+        <div class="flex-col"><label>Date Required</label><input type="date" name="date_required"></div>
+        <div class="flex-col"><label>Date Created</label><input type="text" name="date_created" value="{{ date }}" readonly></div>
+      </div>
+      <label>Notes / Customer Request</label>
+      <textarea name="notes"></textarea>
+    </div>
+
+    <!-- TOLERANCES -->
+    <div class="section">
+      <h2>Tolerances</h2>
+      <div id="tolerance-group">
+        <div class="tolerance-set">
+          <div class="flex-row">
+            <div class="flex-col"><label>Thickness Tolerance</label><input type="text" name="tolerance_thickness[]"></div>
+            <div class="flex-col"><label>Width Tolerance</label><input type="text" name="tolerance_width[]"></div>
+            <div class="flex-col"><label>Length Tolerance</label><input type="text" name="tolerance_length[]"></div>
+          </div>
+        </div>
+      </div>
+      <button type="button" onclick="addToleranceSet()">+ Add Tolerance Set</button>
+    </div>
+
+    <!-- BUNDLE & SKID INFO -->
+    <div class="section">
+      <h2>Bundle & Skid Info</h2>
+      <div class="flex-row">
+        <div class="flex-col"><label>Max Bundle/Skid Weight</label><input type="text" name="max_skid_weight"></div>
+        <div class="flex-col"><label>Requested Pieces Per Bundle/Skid</label><input type="text" name="pieces_per_skid"></div>
+        <div class="flex-col"><label>Max OD</label><input type="text" name="max_od"></div>
+      </div>
+      <div class="flex-row">
+        <label><input type="checkbox" name="wood_spacers"> Wood Spacers</label>
+        <label><input type="checkbox" name="paper_wrapped"> Paper Wrapped</label>
+        <label><input type="radio" name="coil_direction" value="CW"> CW</label>
+        <label><input type="radio" name="coil_direction" value="CCW"> CCW</label>
+        <label><input type="checkbox" name="split_coil"> Split Coil?</label>
+      </div>
+    </div>
+
+    <!-- PROCESS TYPE -->
+    <div class="section">
+      <h2>Process Type</h2>
+      <label>Select Process</label>
+      <select name="process_type">
+        <option value="">-- Select --</option>
+        <option value="slitting">Slitting</option>
+        <option value="cut_to_length">Cut to Length</option>
+        <option value="both">Both</option>
+      </select>
+    </div>
+
+    <!-- CUT TO LENGTH JOB -->
+    <div class="section">
+      <h2>Cut to Length Job</h2>
+      <div class="flex-row">
+        <div class="flex-col"><label>Material Grade</label><input type="text" name="ctl_material_grade[]"></div>
+        <div class="flex-col" style="flex: 2;"><label>Material Description</label><input type="text" name="ctl_material_description[]"></div>
+      </div>
+      <div class="flex-row">
+        <div class="flex-col"><label>Incoming Coils</label><input type="text" name="ctl_incoming_coils[]"></div>
+        <div class="flex-col"><label>Incoming Weight (lbs)</label><input type="text" name="ctl_incoming_weight[]"></div>
+        <div class="flex-col"><label>Finished Pieces</label><input type="text" name="ctl_finished_pieces[]"></div>
+        <div class="flex-col"><label>Finished Weight</label><input type="text" name="ctl_finished_weight[]"></div>
+      </div>
+      <label>Pack Instructions</label>
+      <textarea name="ctl_pack_instructions[]" rows="3"></textarea>
+      <label>Customer Tags</label>
+      <input type="text" name="ctl_customer_tags[]">
+    </div>
+
+    <!-- SLITTING JOB -->
+    <div class="section">
+      <h2>Slitting Job</h2>
+      <div class="flex-row">
+        <div class="flex-col"><label>Material Grade</label><input type="text" name="slit_material_grade[]"></div>
+        <div class="flex-col" style="flex: 2;"><label>Coil Description</label><input type="text" name="slit_coil_description[]"></div>
+      </div>
+      <div class="flex-row">
+        <div class="flex-col"><label>Incoming Coils</label><input type="text" name="slit_incoming_coils[]"></div>
+        <div class="flex-col"><label>Incoming Weight (lbs)</label><input type="text" name="slit_incoming_weight[]"></div>
+        <div class="flex-col"><label>OD Size</label><input type="text" name="slit_od_size[]"></div>
+        <div class="flex-col"><label>PIW</label><input type="text" name="slit_piw[]"></div>
+      </div>
+      <label>Slitter Setup</label>
+      <input type="text" name="slit_setup[]">
+      <label>Pack Instructions</label>
+      <textarea name="slit_pack_instructions[]" rows="3"></textarea>
+      <label>Customer Tags</label>
+      <input type="text" name="slit_customer_tags[]">
+    </div>
+
+    <button type="submit">📤 Submit Work Order</button>
+  </form>
+
+  <!-- JS for adding tolerances -->
+  <script>
+    function addToleranceSet() {
+      const group = document.getElementById("tolerance-group");
+      const div = document.createElement("div");
+      div.className = "tolerance-set";
+      div.innerHTML = `
+        <div class="flex-row">
+          <div class="flex-col"><label>Thickness Tolerance</label><input type="text" name="tolerance_thickness[]"></div>
+          <div class="flex-col"><label>Width Tolerance</label><input type="text" name="tolerance_width[]"></div>
+          <div class="flex-col"><label>Length Tolerance</label><input type="text" name="tolerance_length[]"></div>
+        </div>
+      `;
+      group.appendChild(div);
+    }
+  </script>
+</body>
+</html>

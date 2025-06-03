@@ -1,0 +1,61 @@
+✅ GOAL:
+# Build a professional Bill of Lading (BOL) PDF generator in Nicayne OS.
+# This PDF will consolidate all completed finished tags tied to a Work Order and create a single, printable BOL document.
+
+# ✅ TRIGGER:
+# Allow users to manually generate a Bill of Lading by selecting a Work Order number from a dropdown or archive.
+# The BOL number will be auto-generated, using the format: BL###### (e.g., BL000123)
+
+# ✅ PDF LAYOUT
+
+## ─── GENERAL INFO SECTION ───
+- Title: BILL OF LADING (centered, bold)
+- BOL Number: BL###### (auto-generated, top right)
+- Work Order Number: (same as WO# used in finished tags, placed under BOL number)
+- Customer Name
+- Customer PO#
+- Date Generated (auto-timestamped)
+
+## ─── LINE ITEMS TABLE ───
+- One row per finished tag associated with the Work Order
+- Columns:
+
+| Finished Tag # | Incoming Tag # | Material Grade | Material Description | Heat # | Thickness | Width | Length | Pieces/Coils | Finished Weight |
+
+- Notes:
+  - Length = "coil" for slitting jobs
+  - All fields are pulled from finished tag metadata
+  - Width/Thickness/Length pulled from Material Description string if needed
+
+## ─── FOOTER ───
+- Total # of Bundles: (count of all finished tags listed)
+- Total Weight: (sum of finished weights)
+
+## ─── SIGNATURE AREA ───
+- Driver Signature: ___________________
+- Shipper/Receiver Signature: ___________________
+- Date: ___________________
+
+# ✅ FILE DETAILS
+- Format: US Letter (8.5” x 11”)
+- Font: Arial or Helvetica
+- Save as PDF: NMP-BOL-[DATE]-BL######.pdf
+- Upload to:
+  Chaos > Clients > Nicayne Metal Processing - Chaos > Customers > [Customer Name] > PO#[Customer PO] > [PDF]
+
+# ✅ BACKEND LOGIC
+- Use work order number to fetch all related finished tags from JSON or Google Sheet
+- Auto-generate BOL number as a sequential or random 6-digit ID prefixed with BL
+- Calculate total bundle count and total weight
+- Return PDF as downloadable file
+- Upload it to Google Drive in proper customer > PO folder
+- Optionally store metadata (BOL number, work order, total weight, timestamp) in Google Sheet
+
+# ✅ STYLE
+- Clean, functional layout with clear headings
+- Remove logo to conserve space
+- Use Nicayne OS color scheme only if needed for light highlights (no unnecessary visuals)
+
+# ✅ FUTURE EXTENSIONS (Optional, not needed now):
+- QR code linking to shared PO folder
+- Auto-email BOL to customer contact

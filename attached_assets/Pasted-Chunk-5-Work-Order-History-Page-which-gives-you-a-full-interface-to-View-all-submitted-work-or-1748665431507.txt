@@ -1,0 +1,119 @@
+Chunk 5: Work Order History Page, which gives you a full interface to:
+
+✅ View all submitted work orders
+
+✅ See Work Order #, Customer Name, PO, Date, and Tag Count
+
+✅ Download the PDF and view the JSON backup
+
+✅ Search by Customer or PO in the future (expandable)
+
+✅ Chunk 5 – /work-order-history Page
+📁 1. Create a Folder Scanner
+Add this function to your helper file or main.py:
+
+python
+Copy
+Edit
+def get_work_order_history():
+    base_path = "work_orders"
+    history = []
+
+    for customer in os.listdir(base_path):
+        customer_path = os.path.join(base_path, customer)
+        if not os.path.isdir(customer_path):
+            continue
+
+        for po in os.listdir(customer_path):
+            po_path = os.path.join(customer_path, po)
+            if not os.path.isdir(po_path):
+                continue
+
+            for file in os.listdir(po_path):
+                if file.endswith(".json"):
+                    with open(os.path.join(po_path, file)) as f:
+                        data = json.load(f)
+                        history.append({
+                            "work_order_number": data.get("work_order_number"),
+                            "customer_name": customer,
+                            "po": po,
+                            "date": data.get("date_submitted", ""),
+                            "tags": data.get("customer_tags", ""),
+                            "pdf_path": f"/download/{customer}/{po}/{data.get('work_order_number')}.pdf"
+                        })
+
+    return sorted(history, key=lambda x: x['date'], reverse=True)
+🌐 2. Add Route to main.py
+python
+Copy
+Edit
+@app.route("/work-order-history")
+def work_order_history():
+    history = get_work_order_history()
+    return render_template("work_order_history.html", history=history)
+📥 3. Add File Download Route
+python
+Copy
+Edit
+@app.route("/download/<customer>/<po>/<filename>")
+def download_work_order(customer, po, filename):
+    path = f"work_orders/{customer}/{po}/{filename}"
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True)
+    return "File not found", 404
+🧾 4. Create templates/work_order_history.html
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Work Order History</title>
+  <style>
+    body { font-family: sans-serif; background: #f0f0f0; padding: 30px; }
+    h1 { margin-bottom: 20px; }
+    .record {
+      background: white; padding: 20px; margin-bottom: 15px;
+      border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .record p { margin: 6px 0; }
+    a.button {
+      display: inline-block; margin-right: 10px; margin-top: 10px;
+      background: #007bff; color: white; padding: 8px 12px; text-decoration: none;
+      border-radius: 5px;
+    }
+    a.button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <h1>📋 Work Order History</h1>
+
+  {% for entry in history %}
+    <div class="record">
+      <p><strong>WO#:</strong> {{ entry.work_order_number }}</p>
+      <p><strong>Customer:</strong> {{ entry.customer_name }}</p>
+      <p><strong>PO:</strong> {{ entry.po }}</p>
+      <p><strong>Date:</strong> {{ entry.date }}</p>
+      <p><strong>Tags:</strong> {{ entry.tags }}</p>
+      <a class="button" href="{{ entry.pdf_path }}">⬇️ Download PDF</a>
+    </div>
+  {% else %}
+    <p>No work orders found.</p>
+  {% endfor %}
+</body>
+</html>
+✅ Result
+Access /work-order-history to see all saved jobs
+
+Each entry shows core details, tag count, and a PDF download link
+
+Automatically pulls data from your folder structure:
+
+pgsql
+Copy
+Edit
+work_orders/
+  └── Customer/
+       └── PO/
+            ├── WO-xxxx.json
+            ├── WO-xxxx.pdf

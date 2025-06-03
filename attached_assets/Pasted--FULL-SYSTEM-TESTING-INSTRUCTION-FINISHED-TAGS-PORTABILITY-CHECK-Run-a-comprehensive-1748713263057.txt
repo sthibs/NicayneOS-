@@ -1,0 +1,82 @@
+# 🔧 FULL SYSTEM TESTING INSTRUCTION – FINISHED TAGS + PORTABILITY CHECK
+
+"""
+Run a comprehensive diagnostic and validation of the entire Nicayne Metal Processing system, with a special focus on the Finished Tags module.
+
+📌 PHASE 1: ROUTE & MODULE TESTING
+
+1. ROUTE INTEGRITY
+   - Test all routes:
+     - /finished-tag → form loads, fields populate
+     - /finished-tags → archive loads, filters function
+     - Navigation links work between views
+
+2. FORM FUNCTIONALITY
+   - Submit a sample finished tag using a known work order and tag number
+   - Auto-fill: customer name, PO, material, and heat number pulled from prior data
+   - Validate all inputs: weight, pieces, date, operator initials, tag ID
+
+3. PDF GENERATION
+   - Confirm PDF is generated with correct naming:
+     NMP-FINISHED-TAG-[DATE]-[WORK ORDER]-[PIECES]pcs.pdf
+   - Download works on submit
+   - Regeneration via archive also works
+
+4. GOOGLE DRIVE INTEGRATION
+   - Validate folder creation at:
+     Chaos/Clients/Nicayne Metal Processing - Chaos/Customers/[Customer]/[Customer] - PO#[Number]
+   - Confirm PDF appears in correct folder
+   - Track upload success in logs
+
+5. GOOGLE SHEETS INTEGRATION
+   - FINISHED_TAGS tab should record:
+     - All submitted tag data
+     - Timestamps
+     - Upload + PDF status
+   - Inventory movement:
+     - Tags listed in incoming → move coil from IN_PROCESS to PROCESSED inventory
+
+6. ARCHIVE VIEWER (/finished-tags)
+   - Search: by tag, PO, work order, customer
+   - Use “Duplicate” and confirm pre-fill works
+   - Export CSV and verify contents
+   - View details, heat numbers, and download PDF from list
+   - Ensure mobile responsiveness
+
+7. ERROR HANDLING
+   - Submit invalid tag → confirm system doesn’t crash and gives feedback
+   - Simulate Google Drive/Sheets disconnection → confirm local logging still occurs
+
+8. BACKUP LOGIC
+   - Verify local JSON save for every tag submission
+   - Audit trail preserved even if cloud fails
+
+📌 PHASE 2: PORTABILITY TESTING
+
+1. FULL SYSTEM PORTABILITY
+   - Test if entire system can be ported to:
+     - Another Google Workspace account
+     - Another deployment folder (with updated sheet/Drive secrets)
+     - A clean environment with same structure and secrets
+   - Confirm that no hard-coded paths or fixed IDs block portability
+
+2. FINISHED TAG MODULE PORTABILITY
+   - Test Finished Tag form, PDF gen, Drive upload, and Sheets tracking:
+     - In a different company folder
+     - With alternate clients/POs
+     - With updated Drive structure
+
+   ✅ Pass criteria:
+     - Module works in a new context with new folders
+     - All integrations remap correctly when secrets and folders are reassigned
+
+📌 FINAL DELIVERABLE
+
+- ✅ All tests pass without critical errors
+- ✅ All uploads and tracking succeed
+- ✅ All routes accessible
+- ✅ Inventory flows traceable
+- ✅ Finished Tags module confirmed portable and production-ready
+- ✅ Logs and backups created
+
+"""

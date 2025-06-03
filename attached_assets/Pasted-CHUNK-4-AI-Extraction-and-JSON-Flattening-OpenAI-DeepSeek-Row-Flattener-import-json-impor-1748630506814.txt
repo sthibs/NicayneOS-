@@ -1,0 +1,95 @@
+CHUNK 4: AI Extraction and JSON Flattening (OpenAI + DeepSeek + Row Flattener)
+
+import json
+import openai
+import requests
+from bol_extractor.split_pdf import split_pdf_by_page  # Use your CHUNK 3
+from bol_extractor.ocr_reader import extract_text_from_pdf  # Assumes you're using PyMuPDF/pdfplumber
+from datetime import datetime
+
+OPENAI_API_KEY = os.getenv("OPEN_AI_API_KEY_CAIOS")
+DEEPSEEK_API_KEY = os.getenv("DEEP_SEEK_API")
+
+openai.api_key = OPENAI_API_KEY
+
+def call_openai(prompt_text):
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "Extract coil-level data from the following BOL text and return one row per coil. Format as JSON list."},
+                {"role": "user", "content": prompt_text}
+            ],
+            temperature=0,
+            max_tokens=1500
+        )
+        return response["choices"][0]["message"]["content"]
+    except Exception as e:
+        print("OpenAI failed, falling back to DeepSeek:", e)
+        return None
+
+def call_deepseek(prompt_text):
+    headers = {
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "messages": [
+            {"role": "system", "content": "Extract coil-level data from the following BOL text and return one row per coil. Format as JSON list."},
+            {"role": "user", "content": prompt_text}
+        ],
+        "model": "deepseek-chat",
+        "temperature": 0.0,
+        "max_tokens": 1500
+    }
+    response = requests.post("https://api.deepseek.com/v1/chat/completions", headers=headers, json=payload)
+    return response.json()["choices"][0]["message"]["content"]
+
+def parse_json_rows(raw_json):
+    try:
+        data = json.loads(raw_json)
+        flattened = []
+        for row in data:
+            if "coil_tag" in row:  # Skip rows without valid coil_tag
+                flattened.append([
+                    row.get("bol_number", ""),
+                    row.get("customer_name", ""),
+                    row.get("vendor_name", ""),
+                    row.get("coil_tag", ""),
+                    row.get("material", ""),
+                    row.get("width", ""),
+                    row.get("thickness", ""),
+                    row.get("weight", ""),
+                    row.get("number_of_coils", "1"),
+                    datetime.now().strftime("%Y-%m-%d"),
+                    row.get("heat_number", ""),
+                    "",  # Customer PO left blank
+                    row.get("notes", ""),
+                    "pending_review",
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                ])
+        return flattened
+    except Exception as e:
+        print("Failed to parse response as JSON:", e)
+        return []
+
+def process_bol_pdf(pdf_bytes, supplier_prompt=""):
+    split_pages = split_pdf_by_page(pdf_bytes)
+    all_rows = []
+
+    for page_path in split_pages:
+        with open(page_path, "rb") as f:
+            text = extract_text_from_pdf(f.read())
+
+        prompt = f"{supplier_prompt}\n\n{text}"
+        ai_response = call_openai(prompt) or call_deepseek(prompt)
+        page_rows = parse_json_rows(ai_response)
+        all_rows.extend(page_rows)
+
+    return all_rows
+🔍 What You’ll Need:
+split_pdf_by_page() from Chunk 3
+
+extract_text_from_pdf() from your OCR reader module (can use PyMuPDF/pdfplumber)
+
+CAIOS secrets for OpenAI and DeepSeek

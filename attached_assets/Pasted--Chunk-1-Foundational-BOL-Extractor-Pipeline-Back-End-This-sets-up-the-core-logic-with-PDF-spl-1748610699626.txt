@@ -1,0 +1,76 @@
+# Chunk 1: Foundational BOL Extractor Pipeline (Back-End)
+# This sets up the core logic with PDF splitting, supplier prompt matching, and OpenAI call
+
+import os
+import json
+import io
+import fitz  # PyMuPDF
+import openai
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from dotenv import load_dotenv
+
+# Load environment variables from secrets (Replit uses its own secret system)
+load_dotenv()
+
+# === Secrets ===
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GOOGLE_API_KEY = json.loads(os.getenv("GOOGLE_API_KEY"))  # service account JSON
+SPREADSHEET_ID = os.getenv("SHEET_NICAYNE_SYSTEM")
+UNPROCESSED_TAB = "UNPROCESSED_INVENTORY"
+
+# === Set up OpenAI ===
+openai.api_key = OPENAI_API_KEY
+
+# === Set up Google Sheets ===
+creds = service_account.Credentials.from_service_account_info(GOOGLE_API_KEY, scopes=[
+    'https://www.googleapis.com/auth/spreadsheets',
+    'https://www.googleapis.com/auth/drive.readonly'
+])
+sheets_service = build('sheets', 'v4', credentials=creds)
+
+# === Utility: Split PDF into pages ===
+def split_pdf_pages(file_bytes):
+    pages = []
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
+    for page in doc:
+        text = page.get_text()
+        pages.append(text)
+    return pages
+
+# === Utility: Load Supplier Prompt ===
+def load_supplier_prompt(supplier_name):
+    prompts_path = "supplier_prompts.json"
+    if os.path.exists(prompts_path):
+        with open(prompts_path, 'r') as f:
+            prompts = json.load(f)
+        return prompts.get(supplier_name, "Extract the BOL data as structured JSON.")
+    return "Extract the BOL data as structured JSON."
+
+# === Core Function: Extract BOL Data ===
+def extract_bol_data(file_bytes, supplier_name):
+    pages = split_pdf_pages(file_bytes)
+    prompt_prefix = load_supplier_prompt(supplier_name)
+
+    full_result = []
+    for i, page in enumerate(pages):
+        full_prompt = f"""
+{prompt_prefix}
+
+Here is page {i+1} of the bill of lading:
+""" + page
+
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that extracts BOL shipping data."},
+                {"role": "user", "content": full_prompt}
+            ]
+        )
+        content = response.choices[0].message.content
+        try:
+            parsed = json.loads(content)
+            full_result.append(parsed)
+        except:
+            full_result.append({"error": "Invalid JSON returned", "content": content})
+    return full_result

@@ -1,0 +1,61 @@
+# 🔧 PATCH: Use Shared “Chaos” Folder as Root for Drive File Structure
+
+"""
+🛠️ OBJECTIVE:
+Update the folder creation logic so that all customer + PO folders are created **under the shared "Chaos" folder** in your main Google Drive, not inside the private service account drive.
+
+📌 ACTIONS:
+1. Replace any `null` or missing `parentId` logic with a fixed parent ID tied to your shared "Chaos" folder
+2. This ensures all folders land inside:
+   My Drive > Chaos > Clients > Nicayne Metal Processing - Chaos > Customers > [Customer] > PO#[Number]
+
+🔐 SHARED FOLDER SETUP:
+You’ve already shared the "Chaos" folder with the service account (e.g., caios-agent@...)
+Now we use that folder's ID directly in the code.
+
+✅ PATCH INSTRUCTIONS:
+
+Open: `utils/createPoFolders.ts` (or your folder creation module)
+
+➡️ Find the current root folder logic (likely using `null` or searching for "Chaos")
+
+🔁 Replace the root folder creation with the following:
+
+"""
+
+# Replace this string with the actual ID of your shared "Chaos" folder
+CHAOS_FOLDER_ID = "PASTE_YOUR_CHAOS_FOLDER_ID_HERE"
+
+# Updated root-level logic
+async def findOrCreateFolder(drive, name, parentId):
+    query = f"name = '{name}' and mimeType = 'application/vnd.google-apps.folder'"
+    if parentId:
+        query += f" and '{parentId}' in parents"
+
+    res = await drive.files().list(q=query, fields="files(id, name)").execute()
+    if res['files']:
+        return res['files'][0]
+
+    metadata = {
+        'name': name,
+        'mimeType': 'application/vnd.google-apps.folder',
+        'parents': [parentId or CHAOS_FOLDER_ID]  # <-- Use CHAOS folder as default
+    }
+
+    file = await drive.files().create(body=metadata, fields="id").execute()
+    return {'id': file['id'], 'name': name}
+
+"""
+💡 Use this updated function consistently when creating:
+- Clients
+- Company
+- Customers
+- PO folders
+- Subfolders
+
+✅ RESULT:
+All folders and files will now land inside your shared Drive hierarchy under Chaos > Clients > ...
+
+🧪 NEXT: Submit a Work Order and confirm folder + PDF appear in your Drive, not in service account Drive.
+
+"""

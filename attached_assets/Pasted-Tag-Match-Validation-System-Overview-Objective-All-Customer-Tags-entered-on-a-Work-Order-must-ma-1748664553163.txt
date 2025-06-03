@@ -1,0 +1,114 @@
+Tag Match Validation System Overview
+🎯 Objective:
+All Customer Tags entered on a Work Order must match a row in unprocessed inventory
+
+If any tag is not found:
+
+✅ Display a clear warning to the operator
+
+✅ Flag the issue (but allow override if needed)
+
+✅ Prevent unintentional data loss or mismatched PL numbers
+
+🧠 How We’ll Implement It
+🔹 Step 1: Validate tags on submission
+Inside your existing match_tags_and_move_to_in_processed() function, we’ll:
+
+Separate matched_tags and unmatched_tags
+
+Return both to the calling function
+
+🔹 Step 2: If unmatched tags exist:
+Show a confirmation warning like:
+
+⚠️ The following tags were not found in unprocessed inventory: ["C2345", "C2980"]
+Are you sure you want to proceed?
+
+Offer a bypass checkbox: ✅ “Yes, proceed anyway”
+
+✅ Updated Code for Matching Function
+Replace your existing function with this updated version:
+
+python
+Copy
+Edit
+def match_tags_and_move_to_in_processed(form_data):
+    tags_input = form_data.get("customer_tags", "")
+    po_number = form_data.get("customer_po")
+    if not tags_input or not po_number:
+        return [], []  # No tags or PO = no processing
+
+    tags = [t.strip().upper() for t in tags_input.split(",")]
+    matched_tags = []
+    unmatched_tags = []
+
+    SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+    credentials = Credentials.from_service_account_info(
+        eval(os.environ["GOOGLE_SERVICE_ACCOUNT"]), scopes=SCOPES
+    )
+    client = gspread.authorize(credentials)
+    sheet = client.open_by_key(os.environ["GOOGLE_SHEET_ID"])
+
+    unprocessed = sheet.worksheet("unprocessed")
+
+    try:
+        in_processed = sheet.worksheet("in-processed")
+    except gspread.exceptions.WorksheetNotFound:
+        in_processed = sheet.add_worksheet(title="in-processed", rows="1000", cols="20")
+
+    data = unprocessed.get_all_records()
+    headers = unprocessed.row_values(1)
+
+    for tag in tags:
+        found = False
+        for idx, row in enumerate(data, start=2):  # start=2 to skip header
+            coil_tag = str(row.get("Coil Tag", "")).upper()
+            if coil_tag == tag:
+                found = True
+                matched_tags.append(tag)
+                unprocessed.update_cell(idx, headers.index("Customer PO") + 1, po_number)
+                in_processed.append_row([row.get(h, "") for h in headers])
+                break
+        if not found:
+            unmatched_tags.append(tag)
+
+    return matched_tags, unmatched_tags
+🔁 Update Your Route Logic (in /work-order-form POST handler)
+Right after collecting the form data, insert:
+
+python
+Copy
+Edit
+matched_tags, unmatched_tags = match_tags_and_move_to_in_processed(form_data)
+
+# Check for unmatched tags
+if unmatched_tags and not request.form.get("force_submit"):
+    # Re-render the form with a warning and previous data
+    return render_template("work_order_form.html",
+                           date=datetime.now().strftime("%Y-%m-%d"),
+                           form_data=form_data,
+                           unmatched_tags=unmatched_tags)
+Then modify your form template (work_order_form.html) to show the warning + override checkbox if unmatched_tags exists:
+
+🛠 Add to work_order_form.html (top of <form>, after <form method="POST" ...>)
+html
+Copy
+Edit
+{% if unmatched_tags %}
+  <div style="background:#fff3cd;padding:15px;border:1px solid #ffeeba;color:#856404;margin-bottom:20px;">
+    <strong>⚠️ Warning:</strong> The following tags were not found in unprocessed inventory:<br>
+    <code>{{ unmatched_tags | join(', ') }}</code><br><br>
+    <label>
+      <input type="checkbox" name="force_submit" required>
+      Yes, I understand and want to submit anyway.
+    </label>
+  </div>
+{% endif %}
+✅ Result
+Operators entering invalid tags will see an immediate warning
+
+They’ll need to explicitly confirm before submitting
+
+Tags that aren’t traceable to inventory won’t be silently accepted
+
+This protects against lost PL numbers or invalid work orders

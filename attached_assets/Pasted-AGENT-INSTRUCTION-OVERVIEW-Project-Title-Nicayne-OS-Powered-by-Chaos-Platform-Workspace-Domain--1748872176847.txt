@@ -1,0 +1,59 @@
+AGENT INSTRUCTION OVERVIEW
+Project Title: Nicayne OS – Powered by Chaos Platform
+
+Workspace Domain: caios.app
+System URL (planned): https://nicayne.caios.app
+
+📌 What You’re Building:
+You are developing a modular user access and communication system for a company called Nicayne, hosted inside the CAI.OS platform. Each employee will have a personalized email address (e.g., operator@caios.app, manager@caios.app) tied to their system login. Access levels will be set before account creation.
+
+The platform will include:
+
+A company email dashboard (inbox, compose, reply)
+
+Role-based access to system tools (e.g., Finished Tag Form for operators)
+
+Centralized user creation and permissions control
+
+All hosted under caios.app using Gmail OAuth + Drive APIs already active
+
+🔐 Authentication:
+You are using the existing Google Workspace and OAuth project under caios.app. Do not create a new workspace or project. All APIs (Gmail, Drive, Sheets) should authenticate through the current credentials.
+
+📦 Final Goal:
+A fully functioning Nicayne OS platform with:
+
+Role-based login
+
+Custom dashboards per role
+
+Email interface
+
+Linked permissions
+
+All hosted under nicayne.caios.app
+
+✅ CHUNK 1: Create User Role Logic and Access Control Scaffold
+python
+Copy
+Edit
+# File: utils/user_roles.py
+
+# Define basic user roles and their access privileges
+USER_ROLES = {
+    "operator": {
+        "description": "Operator - Limited access to Finished Tag form only.",
+        "can_access": ["finished_tag"],
+        "email_required": True
+    },
+    "manager": {
+        "description": "Manager - Full access to all forms and email dashboard.",
+        "can_access": ["work_order", "finished_tag", "bol", "invoice", "email_dashboard"],
+        "email_required": True
+    },
+    "admin": {
+        "description": "Admin - Superuser access to all modules including user management.",
+        "can_access": ["work_order", "finished_tag", "bol", "invoice", "email_dashboard", "user_admin"],
+        "email_required": True
+    }
+}

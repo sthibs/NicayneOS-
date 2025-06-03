@@ -1,0 +1,83 @@
+CHUNK 3: Auto-Move to Processed Inventory
+🎯 Objectives:
+When operator submits a Finished Tag:
+
+Look at incoming_tags field (usually coil tags)
+
+Find matching rows in the in-processed Google Sheet
+
+Copy those rows to a new tab: processed
+
+Optionally delete or mark them in in-processed
+
+Link each copied row with the Finished Tag ID for traceability
+
+🧠 Strategy:
+Add this logic directly into your /finished-tag POST route (after Google Sheet write)
+
+Maintain same headers across all sheets for easy migration
+
+📦 Update Your POST Route in main.py
+Right after appending to finished_goods, add this block:
+
+python
+Copy
+Edit
+# === MOVE TAGGED COILS TO PROCESSED ===
+try:
+    # Ensure processed tab exists
+    try:
+        processed = sheet.worksheet("processed")
+    except gspread.exceptions.WorksheetNotFound:
+        processed = sheet.add_worksheet(title="processed", rows="1000", cols="20")
+
+    in_rows = in_proc.get_all_records()
+    in_headers = in_proc.row_values(1)
+    processed_headers = processed.row_values(1)
+
+    if not processed_headers:
+        processed.append_row(in_headers + ["Finished Tag #"])
+
+    updated_rows = []
+    tag_lookup = [t.strip().upper() for t in form.get("incoming_tags", "").split(",") if t.strip()]
+
+    for idx, row in enumerate(in_rows, start=2):
+        tag = str(row.get("Coil Tag", "")).upper()
+        if tag in tag_lookup:
+            values = [row.get(h, "") for h in in_headers]
+            values.append(form["tag_id"])  # add finished tag reference
+            processed.append_row(values)
+            updated_rows.append(idx)
+
+    # Remove or mark in-processed rows
+    for row_idx in sorted(updated_rows, reverse=True):
+        in_proc.delete_row(row_idx)
+
+except Exception as e:
+    print("Failed to move coils to processed tab:", e)
+✅ What This Does:
+Checks incoming_tags submitted on the form
+
+Finds all matching Coil Tags in in-processed
+
+Copies each full row to processed + adds the Finished Tag #
+
+Deletes them from in-processed (or mark logic can be used instead)
+
+Optional (Future):
+Add “Status = Completed” column instead of deleting rows
+
+Allow operator to review matched coils before submission
+
+Include processed coil data in future reporting or invoice logic
+
+You're now tracking every coil from:
+
+Unprocessed → In-processed → Processed
+Tied directly to:
+
+Work Order
+
+Finished Tag
+
+Customer PO

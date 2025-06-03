@@ -1,0 +1,100 @@
+ Chunk 4 Overview
+🎯 Goal:
+When a Work Order is submitted:
+
+Search the unprocessed sheet for matching Customer Tags
+
+If found:
+
+Fill in the Customer PO for those rows
+
+Copy matched rows to the in-processed tab
+
+Optionally mark or remove from unprocessed
+
+Create a folder structure for this customer & PO to hold all job files
+
+🧠 1. Add PO Matching & Row Movement Function
+Paste this into your helper file (e.g., sheet_utils.py) or into main.py:
+
+python
+Copy
+Edit
+def match_tags_and_move_to_in_processed(form_data):
+    tags_input = form_data.get("customer_tags", "")
+    po_number = form_data.get("customer_po")
+    customer_name = form_data.get("customer_name")
+    if not tags_input or not po_number:
+        return
+
+    tags = [t.strip().upper() for t in tags_input.split(",")]
+
+    SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+    credentials = Credentials.from_service_account_info(
+        eval(os.environ["GOOGLE_SERVICE_ACCOUNT"]), scopes=SCOPES
+    )
+    client = gspread.authorize(credentials)
+    sheet = client.open_by_key(os.environ["GOOGLE_SHEET_ID"])
+
+    unprocessed = sheet.worksheet("unprocessed")
+
+    try:
+        in_processed = sheet.worksheet("in-processed")
+    except gspread.exceptions.WorksheetNotFound:
+        in_processed = sheet.add_worksheet(title="in-processed", rows="1000", cols="20")
+
+    data = unprocessed.get_all_records()
+    headers = unprocessed.row_values(1)
+    matched_rows = []
+
+    for idx, row in enumerate(data, start=2):  # start=2 to account for header row
+        coil_tag = str(row.get("Coil Tag", "")).upper()
+        if coil_tag in tags:
+            # Update PO in unprocessed
+            unprocessed.update_cell(idx, headers.index("Customer PO") + 1, po_number)
+            matched_rows.append([row.get(h, "") for h in headers])
+
+    # Copy to in-processed
+    for row in matched_rows:
+        in_processed.append_row(row)
+
+    return len(matched_rows)
+🔁 2. Update Work Order Submission to Call This
+Inside your /work-order-form POST route, after form parsing and before returning the PDF, insert:
+
+python
+Copy
+Edit
+match_tags_and_move_to_in_processed(form_data)
+🗂️ 3. (Optional) Create Folder Structure by PO
+If you want to start building the folder structure that all job artifacts will live in (for future Drive integration), add:
+
+python
+Copy
+Edit
+def create_customer_folder_structure(form_data):
+    po = form_data["customer_po"]
+    customer = form_data["customer_name"]
+    base_path = f"work_orders/{customer}/{po}"
+    os.makedirs(base_path, exist_ok=True)
+    return base_path
+And then call it when saving the PDF/JSON:
+
+python
+Copy
+Edit
+folder = create_customer_folder_structure(form_data)
+json_path = f"{folder}/{form_data['work_order_number']}.json"
+pdf_path = f"{folder}/{form_data['work_order_number']}.pdf"
+✅ Result
+When a Work Order is submitted:
+
+✅ Matching coil tags in unprocessed are found
+
+✅ Their rows are updated with the PO
+
+✅ Those rows are copied into in-processed
+
+✅ Work order JSON/PDF is stored in /work_orders/Customer/PO/
+
+✅ All traceability links back to the Customer PO

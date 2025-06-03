@@ -1,0 +1,134 @@
+Mini Control Panel (Admin Tools)
+This panel lets you:
+
+View and set system config (like max page limit)
+
+Toggle JSON backups on/off
+
+View current config values
+
+Clear job history if needed
+
+All done without interfering with your extraction logic.
+
+🔧 1. Create a config.json File
+Create this at your project root:
+
+json
+Copy
+Edit
+{
+  "max_pages": 100,
+  "enable_backup": true
+}
+This becomes your live control file for the system.
+
+🧠 2. Add Config Loader to main.py
+At the top of your file, add:
+
+python
+Copy
+Edit
+def load_config():
+    try:
+        with open("config.json", "r") as f:
+            return json.load(f)
+    except:
+        return {"max_pages": 100, "enable_backup": True}
+
+def save_config(config):
+    with open("config.json", "w") as f:
+        json.dump(config, f, indent=2)
+🔧 3. Add /control Route
+Add this new route to main.py:
+
+python
+Copy
+Edit
+@app.route("/control", methods=["GET", "POST"])
+def control_panel():
+    config = load_config()
+    message = None
+
+    if request.method == "POST":
+        try:
+            config["max_pages"] = int(request.form.get("max_pages", config["max_pages"]))
+            config["enable_backup"] = True if request.form.get("enable_backup") == "on" else False
+
+            save_config(config)
+            message = "✅ Settings updated!"
+        except Exception as e:
+            message = f"❌ Failed to update: {str(e)}"
+
+    return render_template("control.html", config=config, message=message)
+🧾 4. Create templates/control.html
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Control Panel</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; background: #f9f9f9; }
+    .box { background: white; padding: 25px; border-radius: 10px; width: 400px; margin: auto; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    h1 { margin-bottom: 20px; }
+    label { display: block; margin-top: 10px; }
+    input[type="number"] { width: 100%; padding: 5px; margin-top: 5px; }
+    button { margin-top: 20px; padding: 10px 15px; background: #007bff; color: white; border: none; border-radius: 5px; }
+    button:hover { background: #0056b3; }
+    .msg { margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>⚙️ Control Panel</h1>
+    {% if message %}
+      <p class="msg">{{ message }}</p>
+    {% endif %}
+    <form method="POST">
+      <label>Max Pages to Process:</label>
+      <input type="number" name="max_pages" value="{{ config.max_pages }}" min="1" max="500" />
+
+      <label style="margin-top: 15px;">
+        <input type="checkbox" name="enable_backup" {% if config.enable_backup %}checked{% endif %} />
+        Enable JSON Backup
+      </label>
+
+      <button type="submit">Save Settings</button>
+    </form>
+  </div>
+</body>
+</html>
+🧩 5. Update Your Extractor to Use Config
+In your extractor code, load the config like this:
+
+python
+Copy
+Edit
+from main import load_config
+config = load_config()
+MAX_PAGES = config.get("max_pages", 100)
+ENABLE_BACKUP = config.get("enable_backup", True)
+
+if len(pages) > MAX_PAGES:
+    log_warning(f"PDF has {len(pages)} pages; truncating to {MAX_PAGES}")
+    pages = pages[:MAX_PAGES]
+
+# Later...
+if ENABLE_BACKUP:
+    # Do your JSON backup logic here
+✅ Result
+You now have an admin-accessible control panel at:
+
+bash
+Copy
+Edit
+/control
+You can:
+
+✅ Adjust max_pages
+
+✅ Toggle backups
+
+✅ Immediately apply changes without restarting anything

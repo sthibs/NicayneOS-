@@ -1,0 +1,106 @@
+Work Order Submission Logic (Replit-Ready)
+🧠 1. Update /work-order-form route in main.py
+Replace your existing route with this full handler:
+
+python
+Copy
+Edit
+from flask import request, render_template, send_file
+from datetime import datetime
+import json, os
+from fpdf import FPDF
+import gspread
+from google.oauth2.service_account import Credentials
+
+@app.route("/work-order-form", methods=["GET", "POST"])
+def work_order_form():
+    if request.method == "POST":
+        # Extract form data
+        form_data = request.form.to_dict()
+        form_data["date_submitted"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        work_order_id = f"WO-{int(datetime.now().timestamp())}"
+        form_data["work_order_number"] = work_order_id
+
+        # Save JSON backup
+        os.makedirs("work_orders", exist_ok=True)
+        json_path = f"work_orders/{work_order_id}.json"
+        with open(json_path, "w") as f:
+            json.dump(form_data, f, indent=2)
+
+        # Generate PDF
+        pdf_path = generate_work_order_pdf(form_data)
+
+        # Write to Google Sheet
+        save_work_order_to_sheet(form_data)
+
+        return send_file(pdf_path, as_attachment=True)
+
+    return render_template("work_order_form.html", date=datetime.now().strftime("%Y-%m-%d"))
+📄 2. Create PDF Generator (generate_work_order_pdf)
+Add this function anywhere in main.py or in a helper file:
+
+python
+Copy
+Edit
+def generate_work_order_pdf(data):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+
+    pdf.set_font("Arial", style='B', size=14)
+    pdf.cell(200, 10, txt="Nicayne Work Order", ln=True, align='C')
+
+    pdf.set_font("Arial", size=12)
+    for key, value in data.items():
+        pdf.cell(200, 8, txt=f"{key}: {value}", ln=True)
+
+    path = f"work_orders/{data['work_order_number']}.pdf"
+    pdf.output(path)
+    return path
+Later, we’ll replace this with a styled layout, but for now it prints all fields for testing.
+
+📊 3. Create Sheet Writer (save_work_order_to_sheet)
+This uses the existing sheet already connected in Replit (from secrets):
+
+python
+Copy
+Edit
+def save_work_order_to_sheet(data):
+    SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+    credentials = Credentials.from_service_account_info(
+        eval(os.environ["GOOGLE_SERVICE_ACCOUNT"]), scopes=SCOPES
+    )
+    client = gspread.authorize(credentials)
+    sheet = client.open_by_key(os.environ["GOOGLE_SHEET_ID"])
+
+    try:
+        ws = sheet.worksheet("work_orders")
+    except gspread.exceptions.WorksheetNotFound:
+        ws = sheet.add_worksheet(title="work_orders", rows="1000", cols="20")
+
+    # Write headers if needed
+    if not ws.get_all_values():
+        ws.append_row(list(data.keys()))
+
+    ws.append_row(list(data.values()))
+🗂️ 4. Project Folder Structure
+This will now create:
+
+bash
+Copy
+Edit
+/work_orders/
+   ├── WO-1717202135.json
+   ├── WO-1717202135.pdf
+And log all entries to the "work_orders" tab of your Google Sheet.
+
+✅ You Can Now:
+Fill out the work order form
+
+Submit → PDF downloads instantly
+
+Google Sheet logs it
+
+JSON is saved locally
+
+Ready to hook into PO/inventory logic in Chunk 4

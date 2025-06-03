@@ -1,0 +1,72 @@
+Ensuring the "Work Orders" subfolder is created alongside the others
+
+Routing all Work Order PDFs directly into that subfolder
+
+Validating folder lookups to avoid upload failure due to missing folder ID
+
+✅ Replit Prompt – Patch Work Orders Folder Creation & File Upload Logic
+ts
+Copy
+Edit
+/*
+🔧 PATCH: Ensure Work Orders folder is created and used for PDF uploads
+
+📌 PROBLEM:
+Work Order PDF submission is failing or not appearing in Drive, despite the rest of the customer/PO folder structure working fine.
+
+📌 REASON:
+The "Work Orders" subfolder is missing or not targeted during PDF upload. The upload logic either:
+  - Fails due to a null folder ID
+  - Uploads to the wrong root (e.g. service account Drive)
+
+✅ FIX OBJECTIVES:
+1. Add "Work Orders" to the list of subfolders during PO folder creation
+2. Ensure the upload function targets the "Work Orders" folder correctly
+3. Fail gracefully and log if the upload folder is not found
+
+✅ PATCH STEPS:
+*/
+
+// STEP 1: Update PO Folder Creation Logic (usually in createPOFolders.ts or driveManager.js)
+const subfolders = [
+  'Work Orders',       // ✅ Make sure this is included!
+  'Finished Tags',
+  'Bills of Lading',
+  'Invoices'
+];
+
+for (const name of subfolders) {
+  await findOrCreateFolder(drive, name, poFolder.id);
+}
+
+// STEP 2: Update the Work Order PDF Upload Function
+// Add this before the file upload logic:
+const workOrdersFolderId = await getSubfolderId(poFolderId, 'Work Orders');
+
+if (!workOrdersFolderId) {
+  console.error('❌ Work Orders folder not found. Cannot upload PDF.');
+  return;
+}
+
+// STEP 3: Ensure file is uploaded to correct folder
+await drive.files.create({
+  resource: {
+    name: workOrderFileName,
+    mimeType: 'application/pdf',
+    parents: [workOrdersFolderId]  // ✅ Upload to correct subfolder
+  },
+  media: {
+    mimeType: 'application/pdf',
+    body: fs.createReadStream(localPDFPath)
+  },
+  fields: 'id'
+});
+
+/*
+📦 END RESULT:
+✅ All future work order PDFs will upload directly to:
+Chaos > Clients > Nicayne Metal Processing - Chaos > Customers > [Customer] > PO#[Number] > Work Orders
+
+🧪 ACTION:
+Submit a new Work Order from the form and confirm the PDF appears inside the correct PO > Work Orders folder.
+*/

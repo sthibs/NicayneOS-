@@ -1,0 +1,71 @@
+CHUNK 2 — Load and Filter Inventory by Customer
+Prompt for Replit (Copy & Paste):
+
+markdown
+Copy
+Edit
+📦 CHUNK 2 – Load and Filter Inventory Data by Customer
+
+Now that the inventory dashboard routes and placeholder UI are in place, let's build the functionality that loads **customer-specific inventory data** from all three JSON inventory files.
+
+---
+
+🧠 OBJECTIVE:
+Allow the user to view filtered inventory data for a selected customer in each of these views:
+- Unprocessed
+- In-Process
+- Processed
+- Unified (all combined)
+
+---
+
+🔢 BACKEND TASKS:
+
+1. Load the following inventory JSON files:
+   - `inventory_unprocessed.json`
+   - `inventory_in_process.json`
+   - `inventory_processed.json`
+
+2. For each of the following routes:
+   - `/inventory-report/unprocessed/<customer_name>`
+   - `/inventory-report/in-process/<customer_name>`
+   - `/inventory-report/processed/<customer_name>`
+   - `/inventory-report/all/<customer_name>`
+
+   Implement the following logic:
+   - Load the relevant JSON file(s)
+   - Filter entries where the `"customer"` field matches `<customer_name>` (case-insensitive)
+   - Pass the filtered list to a Jinja template for rendering
+
+3. Create a shared Jinja template:
+   - `templates/inventory_report.html`
+   - Display the report title (e.g. “Unprocessed Inventory for Hammertown”)
+   - Render a clean HTML table with the following fields:
+     - Date Received
+     - Material Type
+     - Dimensions (Thickness × Width × Length)
+     - Pieces
+     - Weight
+     - Status (Unprocessed / In-Process / Processed)
+
+---
+
+🖼 FRONTEND UPDATE:
+
+In the existing `inventory_dashboard.html`:
+- Make the customer input field dynamic — it should submit a GET request to the selected route with the entered customer name.
+- Update the four buttons to include the customer_name parameter in the URL.
+
+For example, the button for “Unprocessed Inventory” should link to:
+/inventory-report/unprocessed/{{ customer_name }}
+
+yaml
+Copy
+Edit
+
+---
+
+✅ SAFETY REMINDER:
+Do not overwrite or alter the contents of the JSON inventory files. Only read and filter. Ensure all routes and templates degrade gracefully if a customer has **no matching records**.
+
+Let me know once this is complete and working. We’ll move on to **Chunk 3: Export to PDF and Email Reports.**

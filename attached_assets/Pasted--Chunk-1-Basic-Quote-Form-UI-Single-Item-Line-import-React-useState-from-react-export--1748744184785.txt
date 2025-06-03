@@ -1,0 +1,71 @@
+// Chunk 1: Basic Quote Form UI (Single Item Line)
+import React, { useState } from 'react';
+
+export default function QuoteForm() {
+  const [quoteDate] = useState(new Date().toISOString().split('T')[0]);
+  const [quoteType, setQuoteType] = useState('Slitting');
+  const [pricingMethod, setPricingMethod] = useState('CWT');
+  const [customerName, setCustomerName] = useState('');
+  const [poNumber, setPoNumber] = useState('');
+  const [item, setItem] = useState({
+    materialGrade: '',
+    description: '',
+    numCoils: '',
+    coilWeight: '',
+    thickness: '',
+    width: '',
+    length: '',
+    packaging: ''
+  });
+
+  return (
+    <div className="p-6 bg-white rounded-2xl shadow-md max-w-4xl mx-auto">
+      <h2 className="text-2xl font-semibold mb-4">Quote Form</h2>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block mb-1">Customer Name</label>
+          <input type="text" className="w-full border rounded px-3 py-2" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+        </div>
+
+        <div>
+          <label className="block mb-1">Customer PO Number</label>
+          <input type="text" className="w-full border rounded px-3 py-2" value={poNumber} onChange={(e) => setPoNumber(e.target.value)} />
+        </div>
+
+        <div>
+          <label className="block mb-1">Quote Date</label>
+          <input type="date" className="w-full border rounded px-3 py-2" value={quoteDate} readOnly />
+        </div>
+
+        <div>
+          <label className="block mb-1">Quote Type</label>
+          <select className="w-full border rounded px-3 py-2" value={quoteType} onChange={(e) => setQuoteType(e.target.value)}>
+            <option value="Slitting">Slitting</option>
+            <option value="Cut-to-Length">Cut-to-Length</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block mb-1">Pricing Method</label>
+          <select className="w-full border rounded px-3 py-2" value={pricingMethod} onChange={(e) => setPricingMethod(e.target.value)}>
+            <option value="CWT">CWT</option>
+            <option value="Lot">Lot Price</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        <h3 className="text-xl font-medium mb-2">Coil Details</h3>
+        <div className="grid grid-cols-3 gap-4">
+          {Object.entries(item).map(([key, val]) => (
+            <div key={key}>
+              <label className="block mb-1 capitalize">{key.replace(/([A-Z])/g, ' $1')}</label>
+              <input type="text" className="w-full border rounded px-3 py-2" value={val} onChange={(e) => setItem({ ...item, [key]: e.target.value })} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

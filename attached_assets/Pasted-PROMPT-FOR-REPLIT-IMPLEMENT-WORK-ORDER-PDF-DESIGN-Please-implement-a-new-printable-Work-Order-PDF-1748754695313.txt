@@ -1,0 +1,105 @@
+PROMPT FOR REPLIT – IMPLEMENT WORK ORDER PDF DESIGN
+
+Please implement a new printable Work Order PDF layout that reflects the finalized mock-up and includes all fields from the actual work order form in Nicayne Metal Processing OS. This PDF will be auto-generated and saved when a work order is submitted.
+
+📄 PDF LAYOUT REQUIREMENTS:
+Header Section:
+
+Company Name: Nicayne Metal Processing Ltd.
+
+Center-aligned logo (optional, small if included)
+
+Large bold title: WORK ORDER
+
+Work Order Number (Auto-generated) – top-right
+
+Date Created – top-right under Work Order #
+
+Quote Number
+
+Customer Name
+
+Customer PO #
+
+Date Required
+
+Packaging Instructions / Customer Notes (multi-line)
+
+Tolerances Table:
+
+Should be styled as a clean 3-column table:
+
+Thickness Tolerance
+
+Width Tolerance
+
+Length Tolerance
+
+Must support multiple entries (if user adds more)
+
+General Job Instructions Section (NEW – recently restored fields):
+Include these fields clearly labeled:
+
+Max Bundle/Skid Weight
+
+Requested Pieces per Bundle
+
+Max OD
+
+Wood Spacers (Yes/No)
+
+Paper Wrap (Yes/No)
+
+Coil Direction on Skid (CW / CCW)
+
+Edge Protectors (Yes/No)
+
+Job Process Table (may contain multiple lines):
+Each job in the work order (Slitting or Cut-to-Length) should generate a line with:
+
+For Cut-to-Length Jobs:
+
+Material Grade
+
+Material Description (e.g., 0.250 x 6" x 240")
+
+Incoming Weight (lbs)
+
+Finished Pieces
+
+Finished Weight
+
+For Slitting Jobs:
+
+Material Grade
+
+Coil Description (e.g., 0.188 x 15 x Coil)
+
+Incoming Weight
+
+Slitter Setup (actual cuts and widths)
+
+Number of Skids
+
+Customer Tags
+
+Ensure each job is labeled with "Slitting Job" or "Cut-to-Length Job" before its block.
+
+Bottom Section:
+Leave space for:
+
+Operator Notes (optional field)
+
+Signature Lines (if needed)
+
+📦 PDF OUTPUT DETAILS:
+Format: US Letter (8.5x11") OR landscape if it improves spacing
+
+Filename format: WO-[WorkOrder#]-[CustomerName].pdf
+
+Store PDF in:
+Google Drive → Chaos → Clients → Nicayne Metal Processing - Chaos → Customers → [Customer Name] → PO#[Customer PO]
+
+Link the file to the work order archive viewer
+
+Add PDF download button in the Work Order dashboard

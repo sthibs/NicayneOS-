@@ -1,0 +1,51 @@
+🧭 OVERVIEW:
+We are introducing a new feature into the Nicayne OS platform — an **Inventory Dashboard** that allows users to generate and print inventory reports for customers. The system will support:
+
+1. Viewing and printing inventory reports by status:
+   - Unprocessed
+   - In-Process
+   - Processed
+   - Unified view (all 3 combined)
+
+2. Filtering these reports by customer, so a user can generate a report for any specific customer's material currently in the system.
+
+3. Emailing these reports to the customer (this will be added in a future chunk).
+
+⚠️ SAFETY FIRST:
+Please **only proceed if this can be implemented safely** without interfering with any existing platform logic, routes, file structures, or workflows. This must be fully non-destructive.
+
+📦 THIS IS CHUNK 1 OF A MULTI-CHUNK IMPLEMENTATION:
+We are feeding this feature to you step-by-step to avoid logic conflicts and ensure each part is cleanly integrated. You will receive more chunks after completing this one successfully.
+
+---
+
+🔧 CHUNK 1 TASK: Set up the Inventory Dashboard structure and placeholder routing (no logic yet)
+
+1. BACKEND ROUTES:
+In `app.py`, please add the following routes:
+
+- `/inventory-dashboard` — Main inventory dashboard interface
+- `/inventory-report/unprocessed/<customer_name>` — Placeholder for unprocessed report
+- `/inventory-report/in-process/<customer_name>` — Placeholder for in-process report
+- `/inventory-report/processed/<customer_name>` — Placeholder for processed report
+- `/inventory-report/all/<customer_name>` — Placeholder for unified report
+
+Each should safely return a simple message like `"Placeholder for [status] inventory report for {customer_name}"`.
+
+2. FRONTEND TEMPLATE:
+Create a new HTML file: `templates/inventory_dashboard.html`
+
+Build a simple page that includes:
+- A header: **“📦 Inventory Dashboard”**
+- A customer name text input or dropdown (can use a hardcoded test value for now like `"demo_customer"`)
+- Four buttons:
+   - “View Unprocessed Inventory”
+   - “View In-Process Inventory”
+   - “View Processed Inventory”
+   - “View Unified Inventory (All)”
+- Each button should link to the corresponding `/inventory-report/.../<customer_name>` route
+
+3. FINAL STEP:
+Once routes and UI are set up, restart the server and confirm that all buttons navigate properly without errors.
+
+Let us know when this is complete and verified. We’ll proceed with **Chunk 2: loading and filtering customer inventory data**.

@@ -1,0 +1,52 @@
+🎨 OVERHAUL ALL PAGES with the updated Nicayne Metal Processing OS branding and layout. Apply this design consistently across all routes including:
+
+- Dashboard (/dashboard)
+- Work Order Form (/work-order-form)
+- Finished Tag Form (/finished-tag)
+- BOL Extractor (/upload-bol or /extractor)
+- Archive/History Pages
+
+🧭 SYSTEM NAME: "Nicayne Metal Processing OS"
+Use this name in all headers and page titles.
+
+🧑‍💼 HEADER:
+Add a full-width top navigation banner with:
+- Left: Nicayne logo (use placeholder if needed)
+- Center: "Nicayne Metal Processing OS"
+- Background: Dark steel gray (#1e1e1e)
+- Font: Bold sans-serif, white text
+
+🖼️ BACKGROUND + STYLE:
+- Background: Light steel/gray tone (#f5f7f9)
+- Main panels: White cards with rounded corners and subtle shadows
+- Font: Clean, modern sans-serif
+
+🎨 COLOR PALETTE:
+- Primary Blue: #005baa (for all main buttons, highlights, action indicators)
+- Accent Red: #e30613 (used sparingly for alerts or delete buttons)
+- Steel Gray: #cccccc (borders, muted UI)
+- White: #ffffff (cards, content backgrounds)
+- Dark Gray: #1e1e1e (headers, navbars)
+
+📐 PAGE STRUCTURE:
+- Use max-width containers with centered layout
+- Add top spacing between sections (40px)
+- Add 3D hover effects on action cards (e.g. create, upload)
+
+🧩 COMPONENT STYLES:
+- Buttons: Use Bootstrap 5 primary styling, override to use #005baa
+- Cards: Slight drop shadow, rounded corners
+- Tables: Borderless, striped, alternating background
+- Input forms: Use white inputs with blue accent focus
+- File uploads: Custom file input with drag/drop look if possible
+
+📱 RESPONSIVENESS:
+- Ensure all elements scale for tablets and laptops
+- Stack cards vertically on smaller screens
+
+📦 APPLY TO:
+Apply this style system-wide across every interface file you've already created and reuse the same CSS (e.g. /static/style.css). Make it the default global theme for the Nicayne OS.
+
+DO NOT change route logic, back-end behavior, or JavaScript event handling unless required for layout.
+
+✅ Return the updated base layout file (HTML or Jinja template) with embedded CSS or import link so it applies globally across all pages.

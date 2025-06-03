@@ -1,0 +1,32 @@
+still not getting anything on my sheet
+
+Just now
+ST
+
+sthibs87
+I can see the BOL extraction is working correctly - it successfully extracted 6 coils with complete details from your PDF and wrote data to Google Sheets row 3. However, the data being written appears to be empty fields instead of the extracted coil information.
+
+Looking at the logs, the extraction found detailed information for each coil (BOL numbers, customer names, coil tags, materials, weights, etc.), but when it gets flattened for the sheet, it becomes empty fields.
+
+The issue is in your JSON flattener - it's not properly transferring the extracted coil data into the sheet format. Your original system was working, so there may be a configuration mismatch between what the extractor is providing and what the flattener expects.
+
+Let me check the current Google Sheets to see what's actually being written:
+
+
+Executed python -c " import os import json import gspread from google.oauth2.service_account import Credentials try: service_account_key = os.environ.get('GOOGLE_SERVICE_ACCOUNT_KEY_NMP') spreadsheet_id = os.environ.get('SPREADSHEET_ID_NMP') creds_info = json.loads(service_account_key) scopes = [ 'https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive' ] credentials = Credentials.from_service_account_info(creds_info, scopes=scopes) client = gspread.authorize(credentials) spreadsheet = client.open_by_key(spreadsheet_id) unprocessed_sheet = spreadsheet.worksheet('UNPROCESSED_INVENTORY') all_data = unprocessed_sheet.get_all_values() print(f'Rows in sheet: {len(all_data)}') if len(all_data) > 0: print('Headers:', all_data[0][:10]) if len(all_data) > 1: print('Row 2:', all_data[1][:10]) if len(all_data) > 2: print('Row 3:', all_data[2][:10]) except Exception as e: print(f'Error: {e}') "
+I can see the issue now. The BOL extraction is working perfectly - it successfully extracted 6 detailed coil records from your PDF and wrote to Google Sheets. However, the data being written to the sheet is just empty fields with only the "NUMBER_OF_COILS" column populated with "1".
+
+The problem is in the data flattening process. The extraction finds all the coil details (BOL numbers, customer names, coil tags, materials, weights, etc.) but when it gets processed for the sheet, the individual coil data isn't being transferred correctly.
+
+Looking at the logs, your extractor extracted this data:
+
+6 coils with BOL numbers 1641193, 1641192
+Customer: NICAYNE METAL PROCESSING LTD.
+Vendor: HAMMERTOWN METALS INC.
+Individual coil tags, materials, weights, dimensions
+Heat numbers and customer PO information
+But the flattened data shows empty fields for all these values.
+
+The issue appears to be that your JSON flattener is expecting a different data structure than what the extractor is providing. Since you mentioned your system was working before, there may be a mismatch in how the data is being passed between the extraction and flattening steps.
+
+Would you like me to check what data structure your JSON flattener is expecting, so we can ensure the extracted data matches that format?

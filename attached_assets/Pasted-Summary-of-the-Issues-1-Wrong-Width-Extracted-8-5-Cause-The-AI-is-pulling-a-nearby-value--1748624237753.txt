@@ -1,0 +1,58 @@
+Summary of the Issues
+🟥 1. Wrong Width Extracted (8" → 5")
+Cause:
+The AI is pulling a nearby value from the wrong table row, likely due to:
+
+OCR overlap or merged rows
+
+Lack of clear instruction on table column positions
+
+🟥 2. Extra Rows with Only NUMBER_OF_COILS
+Cause:
+The LLM is returning partial coil data, probably when the line breaks or OCR layout confuse it.
+
+🧠 THE FIX STRATEGY
+🔧 A. Update the Prompt to Force Accurate Row Mapping
+We will tell the LLM to only extract coil rows that contain ALL required fields, and to reference column positions:
+
+✍️ NEW REFINED PROMPT (for Maksteel)
+json
+Copy
+Edit
+{
+  "supplier": "maksteel",
+  "prompt": "You are extracting coil data from a Bill of Lading from Maksteel. Each coil should be represented as a separate JSON object in an array. Only extract rows from the material table that contain ALL of the following fields: 'COIL_TAG#' (also called Ship Tag), 'HEAT#', 'THICKNESS', 'WIDTH', 'NUMBER_OF_COILS', and 'WEIGHT'. If any of these fields are missing, ignore the row. The WIDTH is always located between THICKNESS and NUMBER_OF_COILS — ensure you extract the correct value from the proper column, not from other parts of the document. The WIDTH must be a valid decimal number like 8.000, not a whole number from elsewhere. Do not extract any rows without a valid numeric COIL_TAG#. Output format is a JSON array of coil objects. Each object must include:\n- customer: from the SOLD TO box\n- bol_number: top right\n- vendor: top left (Maksteel)\n- material_type: from the TYPE field (e.g., HR)\n- coil_tag\n- heat_number\n- thickness\n- width\n- number_of_coils\n- weight\n- notes: from ATTENTION TO SHIPPER/RECEIVER section\nLeave 'po_number' blank. Leave 'date_received' and 'validation_status' blank — those will be auto-filled.\nEXAMPLE OUTPUT:\n[\n  {\n    \"customer\": \"Hammertown Metals Inc.\",\n    \"bol_number\": \"1641209\",\n    \"vendor\": \"Maksteel\",\n    \"material_type\": \"HR\",\n    \"coil_tag\": \"2441667\",\n    \"heat_number\": \"865744\",\n    \"thickness\": \"0.120\",\n    \"width\": \"8.000\",\n    \"number_of_coils\": \"1\",\n    \"weight\": \"4708\",\n    \"notes\": \"This shipment includes two skids.\",\n    \"po_number\": \"\",\n    \"validation_status\": \"\",\n    \"date_received\": \"\"\n  },\n  ...\n]"
+}
+🛠️ B. Update Validation Logic to Match Prompt
+In extractor.py, add this check:
+
+python
+Copy
+Edit
+# Coil must have all core fields and a numeric tag
+if not coil.get("coil_tag") or not coil.get("width") or not coil.get("thickness") or not coil.get("weight"):
+    logger.warning(f"Skipping incomplete coil entry: {coil}")
+    continue
+
+# Extra width validation
+try:
+    width = float(coil["width"])
+    if width < 3.0 or width > 100.0:
+        logger.warning(f"Suspicious width detected ({width}) – skipping row")
+        continue
+except ValueError:
+    logger.warning(f"Non-numeric width value – skipping: {coil['width']}")
+    continue
+🧪 C. Optional Debug Log Enhancer
+Add this to dump full AI result per upload for debugging:
+
+python
+Copy
+Edit
+logger.info("AI returned raw result:\n" + json.dumps(coil_data, indent=2))
+✅ What This Will Solve
+Problem	Fixed by
+Width misread (5" vs 8")	Prompt column mapping + validation logic
+Extra rows	Tag requirement + stricter row validation
+Partial JSON	Prompt enforces field completeness
+Future-proofing	Logs show every value for debugging

@@ -1,0 +1,73 @@
+Tag Search & Reprint Interface
+📁 templates/search_tags.html
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Finished Tags</title>
+</head>
+<body>
+    <h1>🔍 Search Finished Tags</h1>
+    <form method="POST">
+        <label for="customer">Customer Name:</label>
+        <input type="text" name="customer" required><br><br>
+        <label for="po_number">PO Number:</label>
+        <input type="text" name="po_number" required><br><br>
+        <button type="submit">Search</button>
+    </form>
+
+    {% if results %}
+        <h2>Results:</h2>
+        <ul>
+            {% for tag in results %}
+                <li>
+                    <a href="{{ tag['download_url'] }}" target="_blank">{{ tag['title'] }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% elif searched %}
+        <p>No tags found for this customer and PO.</p>
+    {% endif %}
+</body>
+</html>
+🧠 app.py (add route for tag search)
+python
+Copy
+Edit
+from flask import request, render_template
+from pydrive.drive import GoogleDriveFile
+from drive_utils import drive
+
+@app.route('/search-tags', methods=['GET', 'POST'])
+def search_tags():
+    results = []
+    searched = False
+
+    if request.method == 'POST':
+        customer = request.form['customer']
+        po_number = request.form['po_number']
+        searched = True
+        folder_query = f"title contains '{customer} PO {po_number}' and mimeType='application/vnd.google-apps.folder'"
+        folders = drive.ListFile({'q': folder_query}).GetList()
+
+        if folders:
+            po_folder_id = folders[0]['id']
+            file_list = drive.ListFile({'q': f"'{po_folder_id}' in parents"}).GetList()
+            for f in file_list:
+                if f['title'].endswith('.pdf'):
+                    results.append({
+                        "title": f['title'],
+                        "download_url": f['alternateLink']
+                    })
+
+    return render_template('search_tags.html', results=results, searched=searched)
+🔗 Navigation Update (templates/index.html or navbar)
+Add this line:
+
+html
+Copy
+Edit
+<li><a href="/search-tags">🔍 Search Tags</a></li>
+Once you paste this into Replit and run it, you’ll have a working interface to look up any tag PDF stored by PO and customer — and reprint it directly from Google Drive.

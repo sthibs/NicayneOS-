@@ -1,0 +1,149 @@
+/work-order-form Setup
+🧠 1. Add Route to main.py (or app.py)
+Add this Flask route:
+
+python
+Copy
+Edit
+@app.route("/work-order-form", methods=["GET", "POST"])
+def work_order_form():
+    if request.method == "POST":
+        # This will be handled in Chunk 2 (submission logic)
+        return "Form submitted! (logic coming soon)"
+
+    return render_template("work_order_form.html")
+🧾 2. Create templates/work_order_form.html
+In Replit, create this file:
+templates/work_order_form.html
+
+Paste the following complete layout:
+
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Nicayne Work Order Form</title>
+  <style>
+    body { font-family: sans-serif; background: #f5f5f5; padding: 40px; }
+    h1 { text-align: center; }
+    form { background: white; padding: 30px; border-radius: 10px; max-width: 1000px; margin: auto; }
+    .section { margin-bottom: 30px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input[type="text"], input[type="date"], select, textarea {
+      width: 100%; padding: 8px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc;
+    }
+    textarea { height: 100px; }
+    .flex-row { display: flex; gap: 20px; }
+    .flex-col { flex: 1; }
+    .toggle-row { display: flex; gap: 10px; margin-top: 10px; }
+    .toggle-row label { font-weight: normal; }
+    button { margin-top: 20px; padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <h1>🧾 Nicayne Work Order Form</h1>
+  <form method="POST" action="/work-order-form">
+
+    <div class="section">
+      <h2>General Job Info</h2>
+      <div class="flex-row">
+        <div class="flex-col">
+          <label>Work Order #</label>
+          <input type="text" name="work_order_number" readonly value="AUTO-GENERATED">
+        </div>
+        <div class="flex-col">
+          <label>Quote Number</label>
+          <input type="text" name="quote_number">
+        </div>
+        <div class="flex-col">
+          <label>Customer Name</label>
+          <input type="text" name="customer_name">
+        </div>
+      </div>
+
+      <div class="flex-row">
+        <div class="flex-col">
+          <label>Customer PO</label>
+          <input type="text" name="customer_po">
+        </div>
+        <div class="flex-col">
+          <label>Date Required</label>
+          <input type="date" name="date_required">
+        </div>
+        <div class="flex-col">
+          <label>Date Created</label>
+          <input type="text" name="date_created" value="{{ date }}" readonly>
+        </div>
+      </div>
+
+      <label>Tolerance</label>
+      <select name="tolerance">
+        <option>±.005"</option>
+        <option>±.010"</option>
+        <option>.250/.000</option>
+        <option>Custom</option>
+      </select>
+
+      <label>Notes / Customer Request</label>
+      <textarea name="notes"></textarea>
+    </div>
+
+    <div class="section">
+      <h2>Bundle & Skid Info</h2>
+      <div class="flex-row">
+        <div class="flex-col">
+          <label>Max Bundle/Skid Weight</label>
+          <input type="text" name="max_skid_weight">
+        </div>
+        <div class="flex-col">
+          <label>Requested Pieces Per Bundle/Skid</label>
+          <input type="text" name="pieces_per_skid">
+        </div>
+        <div class="flex-col">
+          <label>Max OD</label>
+          <input type="text" name="max_od">
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <label><input type="checkbox" name="wood_spacers"> Wood Spacers</label>
+        <label><input type="checkbox" name="paper_wrapped"> Paper Wrapped</label>
+        <label><input type="radio" name="coil_direction" value="CW"> CW</label>
+        <label><input type="radio" name="coil_direction" value="CCW"> CCW</label>
+        <label><input type="checkbox" name="split_coil"> Split Coil?</label>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Process Type</h2>
+      <label>Select Process</label>
+      <select name="process_type">
+        <option value="">-- Select --</option>
+        <option value="slitting">Slitting</option>
+        <option value="cut_to_length">Cut to Length</option>
+        <option value="both">Both</option>
+      </select>
+    </div>
+
+    <!-- Placeholder sections (Chunk 2 will render these dynamically) -->
+    <div class="section" id="cut-to-length-section">
+      <h3>Cut to Length Jobs</h3>
+      <p>[Dynamic form fields will go here]</p>
+    </div>
+
+    <div class="section" id="slitting-section">
+      <h3>Slitting Jobs</h3>
+      <p>[Dynamic form fields will go here]</p>
+    </div>
+
+    <button type="submit">Submit Work Order</button>
+  </form>
+</body>
+</html>
+🧠 What This Does
+Creates a clean /work-order-form route and UI
+
+Fully portable and HTML/CSS-native (no external libs yet)

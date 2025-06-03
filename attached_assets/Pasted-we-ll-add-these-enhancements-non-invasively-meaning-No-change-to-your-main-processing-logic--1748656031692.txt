@@ -1,0 +1,84 @@
+we’ll add these enhancements non-invasively, meaning:
+
+✅ No change to your main processing logic
+
+✅ All additions isolated (wrapped in try/except, optional config, or post-run actions)
+
+✅ Portability preserved — no new system dependencies or hard-coded paths
+
+🔧 Safe Enhancements: Code Bundle for Replit
+Paste this directly into your extractor.py. It assumes you're using existing lists like all_flattened_coils and functions like log_info() or log_error().
+
+✅ 1. Page-Level Error Isolation
+Find your page loop. Wrap each page's extraction block like this:
+
+python
+Copy
+Edit
+for page_num, page in enumerate(pages):
+    try:
+        log_info(f"Processing page {page_num + 1} of {len(pages)}...")
+        # 👇 Your original page processing logic goes here
+        extracted_data = extract_from_page(page)  # replace with your actual method
+        all_flattened_coils.extend(extracted_data)
+    except Exception as e:
+        log_error(f"⚠️ Error on page {page_num + 1}: {str(e)}")
+✅ 2. Coil Count Validation After Batch Write
+After your append_bol_data_batch(all_flattened_coils) line, add this check:
+
+python
+Copy
+Edit
+try:
+    expected = len(all_flattened_coils)
+    actual = num_rows_written  # Replace with actual value if available
+    if expected != actual:
+        log_warning(f"⚠️ Coil count mismatch: extracted {expected}, wrote {actual}")
+except Exception as e:
+    log_error(f"Validation failed: {str(e)}")
+If you don't track num_rows_written, you can temporarily skip that comparison until added.
+
+✅ 3. Max Page Cap (Optional, Configurable)
+At the top of the file or config section:
+
+python
+Copy
+Edit
+MAX_PAGES = 100  # adjust as needed
+In your page loop:
+
+python
+Copy
+Edit
+if len(pages) > MAX_PAGES:
+    log_warning(f"🚫 PDF has {len(pages)} pages, which exceeds max allowed ({MAX_PAGES}). Truncating.")
+    pages = pages[:MAX_PAGES]
+✅ 4. Logging Progress Indicators
+You already get this with log_info(f"Processing page {page_num + 1}...") from earlier. This lets you see real-time processing status without UI changes.
+
+✅ 5. JSON Backup of Coil Data
+At the end of the extractor, after batch write completes:
+
+python
+Copy
+Edit
+import json
+from datetime import datetime
+
+try:
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    with open(f"coil_data_backup_{timestamp}.json", "w") as f:
+        json.dump(all_flattened_coils, f, indent=2)
+    log_info(f"🗂️ Backup created: coil_data_backup_{timestamp}.json")
+except Exception as e:
+    log_error(f"❌ Failed to write JSON backup: {str(e)}")
+This creates a local .json file in your Replit project folder — easily portable.
+
+✅ Final Result
+With these upgrades:
+
+Errors are caught per page (no full job failure)
+
+You get safer, more transparent processing
+
+Nothing about the core logic, output structure, or deployment portability changes

@@ -1,0 +1,82 @@
+Action Plan
+Step 1: Enable Local Debug Mode to Bypass Google Sheets
+In your extractor.py, add a debug-only mode toggle like this:
+
+python
+Copy
+Edit
+DEBUG_ONLY = True  # set to False when live
+
+...
+
+if DEBUG_ONLY:
+    logger.info("🧪 DEBUG MODE ENABLED – Extracted coils:")
+    for i, coil in enumerate(validated_coils, 1):
+        logger.info(f"{i}: {json.dumps(coil, indent=2)}")
+else:
+    sheets_writer.write_to_sheet(validated_coils)
+This will print all the validated coils to your terminal without triggering the Google Sheets API at all.
+
+Step 2: Log Every Rejected Coil
+Inside your validation loop:
+
+python
+Copy
+Edit
+for coil in raw_coils:
+    if not coil.get("coil_tag") or not coil.get("width") or not coil.get("thickness") or not coil.get("weight"):
+        logger.warning(f"⛔️ Rejected coil (missing required fields):\n{json.dumps(coil, indent=2)}")
+        continue
+    ...
+This will show you exactly what’s being rejected and why.
+
+Step 3: Relax the Validation for Debugging (Temporarily)
+To confirm what's going wrong, temporarily reduce the strictness to include coils with just a coil_tag and width, and log those too:
+
+python
+Copy
+Edit
+# Soft validation for debug
+if not coil.get("coil_tag") or not coil.get("width"):
+    logger.warning(f"⛔️ Skipping coil - missing coil_tag or width:\n{json.dumps(coil, indent=2)}")
+    continue
+This helps us identify partial extractions that we may want to salvage or improve via prompt refinement.
+
+Step 4: Manually Review Output
+Once the debug log shows all 12 coils, confirm:
+
+Was one coil missing a decimal in width (e.g., "8" instead of "8.000")?
+
+Was the tag non-numeric (e.g., dash, spacing issue)?
+
+Did the prompt fail to capture the last row?
+
+This will tell us if the issue is:
+
+✅ Validation too strict
+
+✅ AI failed to capture it
+
+✅ OCR mismatch
+
+✅ Table format inconsistency
+
+✅ Final Prompt Tweak (if needed)
+Once you identify the issue, tweak the prompt to say something like:
+
+“Only extract rows with numeric COIL_TAG values. The WIDTH should be interpreted as a decimal and appear in the table column immediately right of THICKNESS. Do not skip rows if WIDTH is a clean integer like ‘8’ – convert it to 8.000.”
+
+🧪 Test Instructions
+Once ready, do this:
+
+Turn on debug mode
+
+Upload the same 3-page Maksteel BOL
+
+Review logs for:
+
+Number of valid rows
+
+Any rejected coils
+
+Exact formatting issues in the last row

@@ -1,0 +1,54 @@
+Chunk 6 – Finished Tag Dedicated Page Prompt (Replit Ready)
+python
+Copy
+Edit
+# CHUNK 6: Create Finished Tag Entry Page for Nicayne Metal Processing
+
+# ✅ GOALS:
+# - Create a new route: `/finished-tag`
+# - Display a printable form for operators to enter Finished Goods Tag data
+# - Include: Date, Customer Name, Customer PO, Work Order, Material Grade, Material Description,
+#   Number of Pieces, Finished Weight, Heat Number (auto-populated), Operator Initials, Incoming Tags
+# - Buttons: [Duplicate Tag], [Print & Submit]
+# - On submit: Save entry to Finished Goods Google Sheet AND push tag file into correct PO folder
+# - File path structure:
+#     My Drive > Chaos > Clients > Nicayne Metal Processing-Chaos > Customers > [Customer Name] > [Customer PO]
+# - Auto-create Customer/PO folders if they don’t exist
+# - Display live tag form in printable format (Dymo compatible)
+# - Make `/finished-tag` its own clean standalone page, styled for tablet use
+
+# ✅ ADDITIONAL LOGIC:
+# - Auto-fill Customer Name + Work Order if Customer PO is provided (and vice versa)
+# - Auto-populate Heat Number from incoming tags (already parsed in inventory)
+# - Form must support duplicating an existing entry (with editable fields)
+# - When tag is submitted:
+#     1. Append to Finished Goods Sheet
+#     2. Save JSON/PDF copy in correct PO folder (named: [Customer] - PO#[number])
+#     3. Remove coil from “in-processed” tab in inventory and move to “processed” tab
+
+# ✅ FILES TO CREATE:
+# - `templates/finished_tag.html` (printable, clean layout)
+# - New route in `app.py` or `routes/finished_tag.py` depending on structure
+
+# ✅ FORM INPUTS:
+# - Date (autofill today’s date)
+# - Customer Name
+# - Customer PO
+# - Work Order Number
+# - Material Grade
+# - Material Description
+# - Number of Pieces
+# - Finished Weight
+# - Heat Number (autofill from tag entry if matched)
+# - Operator Initials
+# - Incoming Tag Numbers (textarea or comma-separated)
+
+# ✅ BUTTONS:
+# - [Duplicate Tag]: Prefills current data into a new form instance
+# - [Print & Submit]: Sends data to sheet + generates PDF tag
+
+# ⚠️ IMPORTANT:
+# - Do not affect existing BOL extractor or Work Order form
+# - System must remain portable and continue using the current Google Sheet & Drive integrations
+
+# Once completed, restart server and test `/finished-tag` route

@@ -1,0 +1,83 @@
+We’ll use Server-Sent Events (SSE) — a simple, safe way to push log updates to the browser without breaking Flask or needing websockets.
+
+🔧 1. Add Logging Stream Support in main.py
+At the top of main.py, add this:
+
+python
+Copy
+Edit
+from flask import Flask, Response, stream_with_context
+import queue
+Then add a global log queue and log writer function:
+
+python
+Copy
+Edit
+log_queue = queue.Queue()
+
+def live_log(msg):
+    print("[LOG]", msg)  # still prints to console
+    log_queue.put(msg)
+Replace your previous log_info(), log_warning(), etc. with:
+
+python
+Copy
+Edit
+def log_info(msg): live_log(f"[INFO] {msg}")
+def log_warning(msg): live_log(f"[WARNING] {msg}")
+def log_error(msg): live_log(f"[ERROR] {msg}")
+🚰 2. Add Streaming Route to Flask
+Paste this into main.py:
+
+python
+Copy
+Edit
+@app.route("/stream")
+def stream_logs():
+    def generate():
+        while True:
+            msg = log_queue.get()
+            yield f"data: {msg}\n\n"
+    return Response(stream_with_context(generate()), mimetype="text/event-stream")
+🧾 3. Add Live Log Panel to summary.html
+Open your templates/summary.html and insert this block anywhere under the summary box:
+
+html
+Copy
+Edit
+<h2>📡 Live Log</h2>
+<div id="log-box" style="background:#000;color:#0f0;padding:15px;height:300px;overflow:auto;font-family:monospace;border-radius:8px;">
+</div>
+
+<script>
+  const logBox = document.getElementById('log-box');
+  const eventSource = new EventSource("/stream");
+
+  eventSource.onmessage = function(event) {
+    logBox.innerText += event.data + "\n";
+    logBox.scrollTop = logBox.scrollHeight;
+  };
+</script>
+This will start listening to /stream when the summary page loads and print incoming logs in green-on-black terminal style.
+
+✅ Optional: Push Custom Log Events
+Anywhere in your extractor logic, call:
+
+python
+Copy
+Edit
+log_info("Extracting page 3 of 10...")
+log_warning("Unusual tag format on page 2")
+log_error("Failed to read page 5")
+They’ll be sent directly to both:
+
+✅ Terminal output
+
+✅ Realtime browser panel (/summary)
+
+🚀 What This Enables
+Watch extraction happen live after a file is uploaded via /upload
+
+See logs roll in line-by-line without refreshing the page
+
+Keep users informed of slow documents or failed pages

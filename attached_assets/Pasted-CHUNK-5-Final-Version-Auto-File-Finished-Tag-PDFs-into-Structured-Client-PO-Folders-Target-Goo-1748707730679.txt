@@ -1,0 +1,81 @@
+CHUNK 5 (Final Version): Auto-File Finished Tag PDFs into Structured Client/PO Folders
+🔧 Target Google Drive Structure
+css
+Copy
+Edit
+My Drive
+└── Chaos
+    └── Clients
+        └── Nicayne Metal Processing - Chaos
+            └── Customers
+                └── [Customer Name]
+                    └── [Customer Name] PO [PO Number]
+                        └── finished_tag_<TAG>.pdf
+🧱 drive_utils.py (Updated)
+python
+Copy
+Edit
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+import os
+
+gauth = GoogleAuth()
+gauth.LoadCredentialsFile("mycreds.txt")
+if gauth.credentials is None:
+    gauth.LocalWebserverAuth()
+elif gauth.access_token_expired:
+    gauth.Refresh()
+else:
+    gauth.Authorize()
+gauth.SaveCredentialsFile("mycreds.txt")
+
+drive = GoogleDrive(gauth)
+
+def create_or_get_folder(name, parent_id=None):
+    query = f"title='{name}' and mimeType='application/vnd.google-apps.folder'"
+    if parent_id:
+        query += f" and '{parent_id}' in parents"
+    folder_list = drive.ListFile({'q': query}).GetList()
+    if folder_list:
+        return folder_list[0]['id']
+    folder = drive.CreateFile({
+        'title': name,
+        'mimeType': 'application/vnd.google-apps.folder',
+        'parents': [{'id': parent_id}] if parent_id else []
+    })
+    folder.Upload()
+    return folder['id']
+
+def upload_finished_tag_pdf(pdf_path, customer_name, po_number):
+    # Navigate through Chaos > Clients > Nicayne Metal Processing - Chaos
+    chaos_folder = create_or_get_folder("Chaos")
+    clients_folder = create_or_get_folder("Clients", chaos_folder)
+    nmp_folder = create_or_get_folder("Nicayne Metal Processing - Chaos", clients_folder)
+    customers_folder = create_or_get_folder("Customers", nmp_folder)
+
+    # Customer & PO folder structure
+    customer_folder = create_or_get_folder(customer_name, customers_folder)
+    customer_po_folder_name = f"{customer_name} PO {po_number}"
+    po_folder = create_or_get_folder(customer_po_folder_name, customer_folder)
+
+    # Upload file to PO folder
+    file_name = os.path.basename(pdf_path)
+    file = drive.CreateFile({
+        "title": file_name,
+        "parents": [{"id": po_folder}]
+    })
+    file.SetContentFile(pdf_path)
+    file.Upload()
+    return file['id']
+🧩 Hook into Finished Tag Submit Logic
+In your tag submission handler (e.g., app.py):
+
+python
+Copy
+Edit
+from drive_utils import upload_finished_tag_pdf
+
+pdf_path = generate_finished_tag_pdf(form_data)
+drive_id = upload_finished_tag_pdf(pdf_path, form_data["customer_name"], form_data["po_number"])
+print(f"Uploaded finished tag to Drive: {drive_id}")
+Let me know when you’re ready to move on to Chunk 6: Tag Search & Reprint Interface.

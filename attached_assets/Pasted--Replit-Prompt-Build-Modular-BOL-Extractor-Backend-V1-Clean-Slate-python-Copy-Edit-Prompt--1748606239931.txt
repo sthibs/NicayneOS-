@@ -1,0 +1,60 @@
+✅ Replit Prompt – Build Modular BOL Extractor Backend (V1 Clean Slate)
+python
+Copy
+Edit
+# 🧠 Prompt for Replit AI
+
+Build the backend of a modular BOL (Bill of Lading) extractor as a standalone tool that can be deployed from a central admin hub (Chaos Admin Hub). 
+
+🔧 KEY REQUIREMENTS:
+
+1. 📦 **File Structure (Modular & Portable)**  
+   Structure everything clearly for reusability:
+/bol_extractor/
+├── init.py
+├── extractor.py # Main extraction pipeline (PDF → structured JSON)
+├── ocr_utils.py # OCR utilities (Tesseract or PyMuPDF)
+├── llm_refiner.py # OpenAI & DeepSeek refinement logic
+├── json_flattener.py # JSON cleanup and normalization
+├── google_sheets_writer.py # Writes output to Google Sheets
+├── config.py # Loads secrets from Replit ENV
+└── test_bol_extractor.py # Test script for verification
+
+markdown
+Copy
+Edit
+
+2. 🔐 **Secrets & Keys**
+- Use Replit Secrets Manager.
+- Read the following secrets:
+  - `GOOGLE_SERVICE_ACCOUNT_KEY_NMP` – full JSON
+  - `SPREADSHEET_ID_NMP` – sheet URL or ID
+  - `OPENAI_API_KEY`
+  - `DEEPSEEK_API_KEY` (optional fallback)
+
+3. 📄 **Input**
+- Upload a BOL PDF manually via a simple upload script (no Google Drive dependency).
+- Assume 1 PDF = 1 BOL = 1 row.
+
+4. 🔍 **Process**
+- Extract raw text using PyMuPDF or OCR (based on file quality).
+- Refine and structure data using OpenAI (GPT-4o) → fallback to DeepSeek if needed.
+- Fields to extract:
+  - `BOL_NUMBER, CUSTOMER_NAME, VENDOR_NAME, COIL_TAG#, MATERIAL, WIDTH, THICKNESS, WEIGHT, DATE_RECEIVED, HEAT_NUMBER, CUSTOMER_PO, NOTES, VALIDATION_STATUS`
+
+5. 🧼 **JSON Flattener**
+- Normalize nested data (flatten to simple key:value for writing to sheets).
+
+6. 📤 **Output**
+- Append a row into the Google Sheet with columns matching the above.
+- Verify connection at startup with test credentials.
+
+7. 🧪 **Testing**
+- Add test file `test_bol_extractor.py` that:
+  - Loads a sample PDF from `/test_docs`
+  - Prints extracted JSON
+  - Appends to the connected sheet if `TEST_MODE=True`
+
+🛠️ Please now generate the **initial scaffold** and core logic to kickstart the development. Include comments and notes to allow easy modification later.
+
+Let me know when you’re ready for the UI prompt or the admin deployment logic for Chaos Hub. I’ll keep everything modular so future tools follow the same structure

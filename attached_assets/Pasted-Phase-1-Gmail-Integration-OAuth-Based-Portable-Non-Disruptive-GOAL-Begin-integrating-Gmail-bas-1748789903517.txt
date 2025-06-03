@@ -1,0 +1,80 @@
+Phase 1: Gmail Integration (OAuth-Based, Portable, Non-Disruptive)
+GOAL: Begin integrating Gmail-based email functionality into the Nicayne OS platform. This must be fully portable, non-intrusive, and designed to operate independently of the core logic. This phase should add OAuth-based Gmail authentication (for admin@caios.app) and allow basic outbound email functionality (PDF attachments, invoice/quote sending, etc.) without disrupting existing platform features.
+
+🔧 Step-by-Step Instructions for Replit:
+Create a New email_utils.py File
+
+Add a new module dedicated to handling Gmail email sending
+
+This should support:
+
+Sending messages
+
+Attaching local PDF files
+
+Setting to, cc, bcc, subject, body
+
+Portable configuration (OAuth tokens passed in from secrets)
+
+Set Up OAuth 2.0 Authentication
+
+Use Google OAuth to authenticate admin@caios.app
+
+Scope required: https://www.googleapis.com/auth/gmail.send
+
+Store token in Replit Secrets or SQLite (or in-memory cache)
+
+Prompt user if the token is missing or expired (minimal interface or CLI is fine for now)
+
+Create send_email_with_attachment() Function
+
+python
+Copy
+Edit
+def send_email_with_attachment(to_email, subject, body, attachment_path, filename=None):
+    # Uses authenticated Gmail API to send email
+    # Attach local PDF at `attachment_path`
+    pass
+Update app.py to Support Optional Email Dispatch
+
+After generating and uploading each document (WO, Tag, BOL, Invoice), check for:
+
+send_email: true flag in the request (optional)
+
+to_email address (fallback to admin@caios.app if not provided)
+
+If present, send the document via Gmail as an attachment
+
+Ensure No Core Disruption
+
+All Gmail integration logic should run in a separate process/thread
+
+If email fails, it must not affect the file generation or upload pipeline
+
+Add Log Output for Email Events
+
+On successful send: ✅ Email sent to {recipient} with {filename}
+
+On failure: ❌ Email send failed: {error}
+
+🔐 Secrets to Add in Replit:
+GOOGLE_CLIENT_ID
+
+GOOGLE_CLIENT_SECRET
+
+GMAIL_OAUTH_TOKEN_PATH (optional local storage path or SQLite fallback)
+
+DEFAULT_SEND_TO_EMAIL = admin@caios.app
+
+🌐 Example Usage:
+After generating an invoice:
+
+python
+Copy
+Edit
+send_email_with_attachment(
+    to_email="client@company.com",
+    subject="Your Invoice from Nicayne",
+    body="Hi, please find attached your official invoice. Let us know if you have any questions.",
+    attachment_path="pdf_outputs/invoice-2025-06-01.pdf"
+)

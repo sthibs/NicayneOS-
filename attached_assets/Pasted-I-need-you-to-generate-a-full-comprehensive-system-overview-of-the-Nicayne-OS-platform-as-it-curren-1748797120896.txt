@@ -1,0 +1,75 @@
+I need you to generate a full, comprehensive system overview of the Nicayne OS platform as it currently exists. This overview will serve as the foundation for a formal progress report, so it must be clear, exhaustive, and technically accurate.
+
+Please include the following in detail:
+
+Platform Summary:
+
+What Nicayne OS is designed to do
+
+The primary workflows it supports (e.g., work orders, finished tags, BOLs, invoices)
+
+Key user roles and interactions
+
+System Architecture & Flow:
+
+End-to-end flow: from intake to file generation to delivery
+
+Modular file structure (e.g., pdf_outputs/, routing folders in Drive)
+
+QR code embedding logic and how it integrates with downstream file access
+
+How documents are routed to Drive folders or email based on customer and PO
+
+Gmail Integration:
+
+How Gmail OAuth was integrated (client ID, secret, token handling)
+
+Secrets required and where they’re stored
+
+How documents are now sent via email with PDF attachments
+
+Fallback logic if email fails
+
+Drive Integration:
+
+Original Drive-based system (before email integration)
+
+Folder structure and automated routing logic
+
+File replacement behavior for QR-enabled versions
+
+Access/sharing logic improvements and public link fallback
+
+QR Code System:
+
+QR embedding process for each document type
+
+How the system replaces the non-QR version
+
+What data the QR links to, and how it supports digital access
+
+AI Integration:
+
+Where AI is currently integrated (e.g., BOL data extraction, auto-routing, prompt-based generation)
+
+Future or placeholder modules (e.g., upcoming invoice logic or OCR triggers)
+
+Progress Milestones:
+
+List all modules that are complete and working as of now
+
+Describe any partially complete features or known limitations
+
+Confirm which workflows are fully tested end-to-end
+
+Secrets & Configuration Management:
+
+Overview of environment variable keys used in .env or Replit secrets vault
+
+Description of token refresh behavior and sensitive data flow
+
+Next Steps (optional):
+
+Any known planned features or expansion areas if previously mentioned
+
+Please format the output for clarity using Markdown sections or headers, and organize it logically so it can be pasted directly into a formal report later.

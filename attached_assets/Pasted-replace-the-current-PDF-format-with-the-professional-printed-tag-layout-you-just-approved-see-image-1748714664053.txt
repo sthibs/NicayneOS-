@@ -1,0 +1,61 @@
+replace the current PDF format with the professional printed tag layout you just approved (see image). This version will generate a clean, branded, production-ready Finished Tag with ideal spacing, alignment, and labeling—perfect for Dymo or standard printers.
+
+✅ REPLIT INSTRUCTION – PDF Finished Tag Redesign for Print
+python
+Copy
+Edit
+# CHUNK: FINISHED TAG PDF REDESIGN FOR PRINTABLE OUTPUT
+
+"""
+📌 OBJECTIVE:
+Replace the current basic PDF format for the finished tag with a professionally formatted layout that matches the approved visual mockup.
+
+📁 Target layout:
+- Based on uploaded image: "A_label_design_document_for_Nicayne_Metal_Processing.png"
+- Clean table/grid structure with NMP logo
+- Proper spacing for clipboard printing or adhesive label (Dymo-compatible)
+
+✅ HEADER (top bar):
+- Nicayne Metal Processing logo (or text header if image unavailable)
+- Tag ID: right-aligned, bold
+- Date: top-left
+
+✅ SECTION 1: Job Info
+- Work Order #: bold
+- Customer Name
+- Customer PO
+
+✅ SECTION 2: Material Info
+- Material Grade (bold)
+- Material Description (e.g. 0.250 x 6.00 x 240 or COIL)
+- # of Pieces / Coils
+- Finished Weight
+- Heat Number(s) — allow multiple lines if needed
+- Incoming Tag(s)
+
+✅ SECTION 3: Operator Block
+- Operator Initials box (bottom-right)
+
+✅ PDF SETTINGS:
+- Fixed width layout: 4x6 inches (Dymo label size)
+- Font: Clear, sans-serif (Helvetica or Arial)
+- Add solid border lines between sections
+- Use consistent margins and alignment
+- No color (black & white label output)
+- Use bold labels (e.g., "Customer:", "PO:", "Material Grade:")
+
+✅ OUTPUT NAMING:
+- Format: NMP-FINISHED-TAG-[DATE]-[WORK ORDER]-[PIECES]pcs.pdf
+- Save to /pdf_outputs/
+- Upload to correct Drive folder as done previously
+
+✅ SAFETY:
+- Must still support full offline fallback (save to local file even if upload fails)
+- Preserve the same data passed in form (from finished tag submission)
+
+✅ DEPLOY:
+- Replace existing `generate_finished_tag_pdf()` function with new layout
+- Use `reportlab` or alternate PDF generation library if preferred
+- Restart server and test by submitting a new tag
+
+"""

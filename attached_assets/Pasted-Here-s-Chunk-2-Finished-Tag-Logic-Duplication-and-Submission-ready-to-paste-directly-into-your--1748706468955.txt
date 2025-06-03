@@ -1,0 +1,165 @@
+Here's Chunk 2: Finished Tag Logic, Duplication, and Submission — ready to paste directly into your Replit project.
+
+✅ CHUNK 2 — REPLIT INSTRUCTIONS
+This includes:
+
+✅ Lookup logic (PO ↔ WO ↔ Customer, Incoming Tag → Heat Number)
+
+✅ “Duplicate Tag” link support
+
+✅ “Submit & Print” button
+
+✅ Logs to finished_goods sheet
+
+✅ Saves JSON copy to /finished_tags/
+
+📁 1. Add POST Handler to /finished-tag in main.py
+Replace your existing /finished-tag route with this full version:
+
+python
+Copy
+Edit
+import json, os
+from flask import request, render_template, send_file, redirect, url_for
+from datetime import datetime
+import gspread
+from google.oauth2.service_account import Credentials
+
+@app.route("/finished-tag", methods=["GET", "POST"])
+def finished_tag():
+    today = datetime.now().strftime("%Y-%m-%d")
+    tag_id = request.args.get("duplicate") or datetime.now().strftime("%H%M%S")
+    prefill = {}
+
+    # LOAD PREFILL FROM WORK ORDER JSON
+    def lookup_wo_info(po=None, wo=None):
+        try:
+            for fname in os.listdir("work_orders"):
+                if fname.endswith(".json"):
+                    with open(os.path.join("work_orders", fname)) as f:
+                        data = json.load(f)
+                        if po and data.get("customer_po") == po:
+                            return data
+                        if wo and data.get("work_order_number") == wo:
+                            return data
+        except:
+            pass
+        return {}
+
+    # LOAD PREFILL FROM DUPLICATE
+    if request.args.get("duplicate"):
+        try:
+            with open(f"finished_tags/{request.args.get('duplicate')}.json") as f:
+                prefill = json.load(f)
+        except:
+            prefill = {}
+
+    if request.method == "POST":
+        form = request.form.to_dict()
+        form["tag_id"] = form.get("tag_id") or datetime.now().strftime("%H%M%S")
+        form["date"] = form.get("date") or today
+
+        # AUTO-FILL LOOKUPS
+        if not form.get("customer_name") or not form.get("work_order_number"):
+            wo_data = lookup_wo_info(po=form.get("customer_po"), wo=form.get("work_order_number"))
+            if wo_data:
+                form["customer_name"] = wo_data.get("customer_name", "")
+                form["customer_po"] = wo_data.get("customer_po", "")
+                form["work_order_number"] = wo_data.get("work_order_number", "")
+
+        # HEAT NUMBER LOOKUP FROM TAGS (in-processed sheet)
+        tag_input = form.get("incoming_tags", "").strip()
+        tags = [t.strip().upper() for t in tag_input.split(",") if t]
+        heat_numbers = []
+
+        try:
+            SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+            credentials = Credentials.from_service_account_info(
+                eval(os.environ["GOOGLE_SERVICE_ACCOUNT"]), scopes=SCOPES
+            )
+            client = gspread.authorize(credentials)
+            sheet = client.open_by_key(os.environ["GOOGLE_SHEET_ID"])
+            in_proc = sheet.worksheet("in-processed")
+            rows = in_proc.get_all_records()
+
+            for row in rows:
+                if str(row.get("Coil Tag", "")).upper() in tags:
+                    hn = row.get("Heat Number", "").strip()
+                    if hn and hn not in heat_numbers:
+                        heat_numbers.append(hn)
+        except Exception as e:
+            print("Heat lookup failed:", e)
+
+        form["heat_number"] = ", ".join(heat_numbers)
+
+        # SAVE JSON
+        os.makedirs("finished_tags", exist_ok=True)
+        with open(f"finished_tags/{form['tag_id']}.json", "w") as f:
+            json.dump(form, f, indent=2)
+
+        # WRITE TO FINISHED GOODS SHEET
+        try:
+            fg_sheet = sheet.worksheet("finished_goods")
+        except gspread.exceptions.WorksheetNotFound:
+            fg_sheet = sheet.add_worksheet(title="finished_goods", rows="1000", cols="20")
+
+        headers = ["Tag ID", "Date", "Work Order", "Customer", "PO", "Material Grade", "Material Description", "Qty", "Weight", "Heat Number", "Incoming Tags", "Operator"]
+        values = [
+            form["tag_id"],
+            form["date"],
+            form.get("work_order_number", ""),
+            form.get("customer_name", ""),
+            form.get("customer_po", ""),
+            form.get("material_grade", ""),
+            form.get("material_description", ""),
+            form.get("qty", ""),
+            form.get("finished_weight", ""),
+            form.get("heat_number", ""),
+            form.get("incoming_tags", ""),
+            form.get("operator", "")
+        ]
+
+        # Write headers if empty
+        if not fg_sheet.get_all_values():
+            fg_sheet.append_row(headers)
+        fg_sheet.append_row(values)
+
+        return redirect(url_for("finished_tag", duplicate=form["tag_id"]))
+
+    return render_template("finished_tag.html", date=today, tag_id=tag_id, prefill=prefill)
+📄 2. Update finished_tag.html for Prefill + Buttons
+Make sure these fields match your layout and update <input> and <textarea> elements like this:
+
+html
+Copy
+Edit
+<input type="text" name="customer_name" value="{{ prefill.get('customer_name', '') }}">
+<input type="text" name="customer_po" value="{{ prefill.get('customer_po', '') }}">
+<input type="text" name="work_order_number" value="{{ prefill.get('work_order_number', '') }}">
+<input type="text" name="material_grade" value="{{ prefill.get('material_grade', '') }}">
+<input type="text" name="material_description" value="{{ prefill.get('material_description', '') }}">
+<input type="text" name="qty" value="{{ prefill.get('qty', '') }}">
+<input type="text" name="finished_weight" value="{{ prefill.get('finished_weight', '') }}">
+<input type="text" name="operator" value="{{ prefill.get('operator', '') }}">
+<textarea name="incoming_tags">{{ prefill.get('incoming_tags', '') }}</textarea>
+Add these at the bottom:
+
+html
+Copy
+Edit
+<button type="submit">📤 Submit & Print</button>
+<a href="/finished-tag?duplicate={{ tag_id }}"><button type="button">🧬 Duplicate This Tag</button></a>
+✅ Done!
+You can now:
+
+Submit and print a finished tag
+
+Auto-populate customer/WO/PO info
+
+Auto-fill heat numbers from incoming tags
+
+Save a local JSON copy
+
+Log to the finished_goods sheet
+
+Duplicate a tag in 1 click for quick reuse

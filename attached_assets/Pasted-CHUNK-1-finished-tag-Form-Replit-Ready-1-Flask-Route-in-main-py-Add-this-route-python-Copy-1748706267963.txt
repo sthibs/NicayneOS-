@@ -1,0 +1,172 @@
+CHUNK 1: /finished-tag Form (Replit-Ready)
+📁 1. Flask Route in main.py
+Add this route:
+
+python
+Copy
+Edit
+from flask import render_template
+from datetime import datetime
+
+@app.route("/finished-tag", methods=["GET", "POST"])
+def finished_tag():
+    today = datetime.now().strftime("%Y-%m-%d")
+    tag_id = f"{datetime.now().strftime('%H%M%S')}"  # 6-digit number, e.g. "153025"
+    return render_template("finished_tag.html", date=today, tag_id=tag_id)
+📄 2. Create templates/finished_tag.html
+Paste this into templates/finished_tag.html:
+
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NMP Finished Tag</title>
+  <style>
+    @media print {
+      button { display: none; }
+      body { margin: 0; padding: 20px; }
+    }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      background: #fff;
+      max-width: 800px;
+      margin: auto;
+      border: 1px solid #ccc;
+    }
+    h1 {
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 20px;
+      margin-bottom: 20px;
+    }
+    .flex-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .field {
+      flex: 1;
+      margin-right: 15px;
+    }
+    .field:last-child {
+      margin-right: 0;
+    }
+    label {
+      font-weight: bold;
+      font-size: 12px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 5px;
+      font-size: 14px;
+      margin-top: 3px;
+      margin-bottom: 10px;
+    }
+    textarea {
+      height: 60px;
+    }
+    .signature-box {
+      width: 200px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 15px;
+      font-size: 14px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>NMP Finished Tag</h1>
+
+  <div class="flex-row">
+    <div class="field">
+      <label>Date</label>
+      <input type="text" value="{{ date }}" readonly>
+    </div>
+    <div class="field">
+      <label>Finished Tag #</label>
+      <input type="text" value="{{ tag_id }}" readonly>
+    </div>
+    <div class="field">
+      <label>NMP Work Order #</label>
+      <input type="text" placeholder="Auto-linked or entered manually">
+    </div>
+  </div>
+
+  <div class="flex-row">
+    <div class="field">
+      <label>Customer Name</label>
+      <input type="text" placeholder="Auto-filled from WO or PO">
+    </div>
+    <div class="field">
+      <label>Customer PO</label>
+      <input type="text" placeholder="Auto-filled or entered manually">
+    </div>
+  </div>
+
+  <div class="flex-row">
+    <div class="field">
+      <label>Material Grade</label>
+      <input type="text">
+    </div>
+    <div class="field">
+      <label>Material Description</label>
+      <input type="text" placeholder="e.g., .250 x 6.00 x 240 or Coil">
+    </div>
+  </div>
+
+  <div class="flex-row">
+    <div class="field">
+      <label>Number of Pieces or Coils</label>
+      <input type="text">
+    </div>
+    <div class="field">
+      <label>Finished Weight</label>
+      <input type="text">
+    </div>
+  </div>
+
+  <div class="flex-row">
+    <div class="field">
+      <label>Heat Number(s)</label>
+      <textarea placeholder="Auto-populated from incoming tag(s)"></textarea>
+    </div>
+    <div class="field">
+      <label>Operator Initials</label>
+      <input type="text">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Incoming Tag #(s)</label>
+    <textarea placeholder="Tag numbers of incoming coil(s) used"></textarea>
+  </div>
+
+  <button onclick="window.print()">🖨️ Print Tag</button>
+</body>
+</html>
+✅ Features Implemented:
+🖨️ Clean, printable layout
+
+🧾 Auto-generates Finished Tag # (6 digits)
+
+🗓️ Date auto-filled
+
+🧠 Ready for:
+
+PO → auto-fill WO + Customer
+
+Incoming Tags → auto-fill Heat Numbers
+
+🔁 Future: Save tag to JSON, log to Google Sheet, move in-processed → processed

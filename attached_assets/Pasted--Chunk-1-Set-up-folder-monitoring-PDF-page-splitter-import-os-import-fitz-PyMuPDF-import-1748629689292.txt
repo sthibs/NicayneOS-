@@ -1,0 +1,64 @@
+# Chunk 1: Set up folder monitoring + PDF page splitter
+
+import os
+import fitz  # PyMuPDF
+import shutil
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+from io import BytesIO
+
+# Load from secrets
+GOOGLE_SERVICE_ACCOUNT_JSON = os.getenv("GOOGLE_API_KEY")
+CAIOS_ROOT_FOLDER_URL = os.getenv("CAIOS_ROOT_FOLDER_URL")
+CLIENTS_FOLDER_URL = os.getenv("CLIENTS_FOLDER_URL")
+NMP_FOLDER_URL = os.getenv("NMP_FOLDER_URL")
+
+# Get folder ID from URL
+NMP_FOLDER_ID = NMP_FOLDER_URL.split("/")[-1]
+
+# Auth setup
+creds = Credentials.from_service_account_info(eval(GOOGLE_SERVICE_ACCOUNT_JSON))
+drive_service = build("drive", "v3", credentials=creds)
+
+# Split PDF into individual pages and save locally
+def split_pdf(pdf_path, output_dir):
+    os.makedirs(output_dir, exist_ok=True)
+    doc = fitz.open(pdf_path)
+    for page_num in range(doc.page_count):
+        split_path = os.path.join(output_dir, f"page_{page_num+1}.pdf")
+        split_doc = fitz.open()
+        split_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
+        split_doc.save(split_path)
+        split_doc.close()
+    doc.close()
+
+# Download latest BOL files from Drive and split them
+def download_and_split_bols():
+    query = f"'{NMP_FOLDER_ID}' in parents and mimeType='application/pdf'"
+    results = drive_service.files().list(q=query, fields="files(id, name)").execute()
+    files = results.get("files", [])
+
+    for file in files:
+        file_id = file["id"]
+        file_name = file["name"]
+        print(f"Processing file: {file_name}")
+
+        request = drive_service.files().get_media(fileId=file_id)
+        fh = BytesIO()
+        downloader = MediaIoBaseDownload(fh, request)
+
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
+
+        temp_pdf = f"temp_bol.pdf"
+        with open(temp_pdf, "wb") as f:
+            f.write(fh.getbuffer())
+
+        split_pdf(temp_pdf, "split_pages")
+        os.remove(temp_pdf)
+
+# Run the process if this is the main script
+if __name__ == "__main__":
+    download_and_split_bols()

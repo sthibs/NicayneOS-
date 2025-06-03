@@ -1,0 +1,90 @@
+CHUNK 3: User Directory Dashboard + OAuth Placeholder
+This will:
+
+Display all created users
+
+Show their system email, role, and permissions
+
+Include a placeholder button to link their Google account (OAuth will be handled in a later chunk)
+
+🧠 Create File: routes/user_directory.py
+python
+Copy
+Edit
+# File: routes/user_directory.py
+
+from flask import Blueprint, render_template
+import json
+import os
+
+user_directory_bp = Blueprint('user_directory', __name__, template_folder='../templates')
+
+@user_directory_bp.route('/user_directory')
+def user_directory():
+    USERS_FILE = 'data/users.json'
+    if os.path.exists(USERS_FILE):
+        with open(USERS_FILE, 'r') as f:
+            users = json.load(f)
+    else:
+        users = []
+
+    return render_template('user_directory.html', users=users)
+🖥️ Template: user_directory.html
+html
+Copy
+Edit
+<!-- File: templates/user_directory.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Directory - Nicayne OS</title>
+</head>
+<body>
+    <h2>Registered Users</h2>
+    {% if users %}
+        <table border="1" cellpadding="8">
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Permissions</th>
+                <th>OAuth</th>
+            </tr>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.role }}</td>
+                    <td>
+                        <ul>
+                        {% for perm in user.permissions %}
+                            <li>{{ perm }}</li>
+                        {% endfor %}
+                        </ul>
+                    </td>
+                    <td>
+                        <button disabled>🔒 Link Google Account (Coming Soon)</button>
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No users found.</p>
+    {% endif %}
+</body>
+</html>
+🧩 Integrate into App
+In your main.py or app initialization file:
+
+python
+Copy
+Edit
+from routes.user_directory import user_directory_bp
+app.register_blueprint(user_directory_bp)
+🧪 Test Route
+Visit /user_directory in your browser to confirm:
+
+All users appear with role, system email, and permission list
+
+The “Link Google Account” button is in place for future OAuth setup

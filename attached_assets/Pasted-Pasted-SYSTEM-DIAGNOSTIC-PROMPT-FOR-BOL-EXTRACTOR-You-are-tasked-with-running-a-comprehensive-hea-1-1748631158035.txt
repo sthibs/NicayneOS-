@@ -1,0 +1,76 @@
+Pasted--SYSTEM-DIAGNOSTIC-PROMPT-FOR-BOL-EXTRACTOR-You-are-tasked-with-running-a-comprehensive-hea-1748631014862.txt
+# 📦 SYSTEM DIAGNOSTIC PROMPT FOR BOL EXTRACTOR
+
+You are tasked with running a **comprehensive health check** on the BOL Extractor system and PDF Splitter pipeline currently deployed using the CAIOS environment variables.
+
+Please perform the following steps in order:
+
+---
+
+### 🔍 1. CONFIGURATION VALIDATION
+- Check that the following environment variables are present and properly loaded:
+  - `OPEN_AI_API_KEY_CAIOS`
+  - `DEEP_SEEK_API`
+  - `GOOGLE_SERVICE_ACCOUNT_KEY_CAIOS_NMP`
+  - `SPREADSHEET_ID_NMP`
+  - `GOOGLE_DRIVE_FOLDER_CAIOS_ROOT`
+  - `GOOGLE_DRIVE_FOLDER_CLIENTS`
+  - `GOOGLE_DRIVE_FOLDER_NICAYNE`
+  - `UNPROCESSED_INVENTORY_SHEET_URL_NMP`
+
+If any are missing or improperly formatted, log the issue clearly.
+
+---
+
+### 📄 2. PDF SPLITTER TEST
+- Use a sample multi-page test PDF (e.g., 5 pages)
+- Run it through `bol_extractor/pdf_splitter.py`
+- Confirm that:
+  - It splits into 5 distinct pages
+  - Each file is saved properly with unique names
+  - Each page is accessible and contains readable OCR text
+
+---
+
+### 🧠 3. LLM EXTRACTION TEST (OPENAI & DEEPSEEK)
+- Send a known-good BOL page to the LLM pipeline via `bol_extractor/llm_refiner.py`
+- Confirm:
+  - It returns structured JSON with all expected keys:
+    - `BOL_NUMBER`, `CUSTOMER_NAME`, `VENDOR_NAME`, `COIL_TAG#`, `MATERIAL`, `WIDTH`, `THICKNESS`, `WEIGHT`, `HEAT_NUMBER`, `NOTES`
+  - It filters out blank rows or rows with no `COIL_TAG#`
+
+Test both:
+- OpenAI (primary)
+- DeepSeek (fallback) — by mocking OpenAI failure
+
+---
+
+### 📤 4. GOOGLE SHEETS WRITE TEST
+- Create a test row and attempt to write it to the `UNPROCESSED_INVENTORY_SHEET_URL_NMP` tab
+- Confirm:
+  - Credentials work
+  - The row appears in the sheet
+  - No 403/permission errors
+  - The correct tab (gid=1968799585) is being used
+
+---
+
+### 🗂 5. DIRECTORY & FILE STRUCTURE CHECK
+- Confirm all the following modules exist and are used:
+  - `bol_extractor/pdf_splitter.py`
+  - `bol_extractor/llm_refiner.py`
+  - `bol_extractor/ocr_utils.py`
+  - `bol_extractor/config.py`
+  - `bol_extractor/google_sheets.py`
+
+Log any missing or unused modules.
+
+---
+
+### ✅ FINAL REPORT
+Output a structured summary including:
+- ✔ Which modules passed
+- ❌ Which modules failed or need attention
+- 🛠 Suggested next steps to fix any issues found
+
+This test should NOT overwrite any production files or modify your working sheet.

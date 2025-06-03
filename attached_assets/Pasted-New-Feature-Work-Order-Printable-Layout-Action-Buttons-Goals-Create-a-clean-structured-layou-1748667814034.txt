@@ -1,0 +1,127 @@
+New Feature: Work Order Printable Layout + Action Buttons
+🎯 Goals:
+Create a clean, structured layout optimized for print (paper or PDF)
+
+Add these three buttons to /work-order-form:
+
+🖨️ Print (opens print layout in new tab)
+
+✅ Submit (saves work order only)
+
+✅🖨️ Submit & Print (saves and opens print view)
+
+Ensure the output works wirelessly on tablets/iPads with connected printers
+
+🧠 Implementation Plan
+🧾 1. Create a New Route: /work-order-print/<customer>/<po>/<work_order_id>
+This will render a full HTML print layout using the stored JSON:
+
+python
+Copy
+Edit
+@app.route("/work-order-print/<customer>/<po>/<work_order_id>")
+def print_work_order(customer, po, work_order_id):
+    path = f"work_orders/{customer}/{po}/{work_order_id}.json"
+    if not os.path.exists(path):
+        return "Work order not found", 404
+
+    with open(path) as f:
+        data = json.load(f)
+
+    return render_template("work_order_print.html", data=data)
+🎨 2. Create the Print Template: templates/work_order_print.html
+This template:
+
+Uses a clean layout
+
+Auto-loads window.print() on load
+
+Looks great on letter-sized paper (8.5"x11")
+
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Print Work Order</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; }
+    h1 { text-align: center; }
+    .section { margin-bottom: 25px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    td, th { border: 1px solid #ccc; padding: 8px; }
+  </style>
+</head>
+<body onload="window.print()">
+  <h1>Nicayne Work Order</h1>
+
+  <div class="section">
+    <strong>Work Order #:</strong> {{ data.work_order_number }}<br>
+    <strong>Customer:</strong> {{ data.customer_name }}<br>
+    <strong>PO:</strong> {{ data.customer_po }}<br>
+    <strong>Quote:</strong> {{ data.quote_number }}<br>
+    <strong>Date Required:</strong> {{ data.date_required }}<br>
+  </div>
+
+  <div class="section">
+    <strong>Bundle & Skid Info</strong>
+    <table>
+      <tr><th>Max Weight</th><th>Pieces per Skid</th><th>Max OD</th><th>Direction</th><th>Wood</th><th>Paper</th><th>Split Coil</th></tr>
+      <tr>
+        <td>{{ data.max_skid_weight }}</td>
+        <td>{{ data.pieces_per_skid }}</td>
+        <td>{{ data.max_od }}</td>
+        <td>{{ data.coil_direction }}</td>
+        <td>{{ "Yes" if data.wood_spacers else "No" }}</td>
+        <td>{{ "Yes" if data.paper_wrapped else "No" }}</td>
+        <td>{{ "Yes" if data.split_coil else "No" }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="section">
+    <strong>Notes:</strong><br>
+    <div>{{ data.notes }}</div>
+  </div>
+
+  <!-- You can add CTL/slitting layout here later -->
+
+</body>
+</html>
+🖱️ 3. Update work_order_form.html with Action Buttons
+At the bottom of the form, replace the current button with this set:
+
+html
+Copy
+Edit
+<div style="margin-top: 30px;">
+  <button type="submit" name="action" value="submit">Submit</button>
+  <button type="submit" name="action" value="submit_print">Submit & Print</button>
+  <button type="button" onclick="window.print()">Print</button>
+</div>
+🔄 4. Update Form Submission Handler to Support Actions
+In your /work-order-form POST route:
+
+python
+Copy
+Edit
+action = request.form.get("action")
+
+# After saving data...
+if action == "submit_print":
+    return redirect(f"/work-order-print/{customer}/{po}/{work_order_id}")
+elif action == "submit":
+    return redirect("/work-order-history")
+✅ Final Result
+Your work orders now generate a clean, printable layout
+
+Operators can:
+
+Submit only
+
+Submit and immediately print
+
+Print without saving (for tests)
+
+Ready to connect to any wireless printer via iPad or browser-based print dialog

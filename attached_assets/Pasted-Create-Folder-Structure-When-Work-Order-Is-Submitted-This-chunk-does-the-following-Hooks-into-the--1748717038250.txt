@@ -1,0 +1,93 @@
+Create Folder Structure When Work Order Is Submitted
+This chunk does the following:
+
+Hooks into the Work Order Submission flow.
+
+Creates folders in the correct Google Drive location using the format:
+
+css
+Copy
+Edit
+My Drive > Chaos > Clients > Nicayne Metal Processing - Chaos > Customers > [Customer Name] > PO#[PO Number]
+Inside that PO folder, it automatically creates subfolders for:
+
+Finished Tags
+
+Bills of Lading
+
+Invoices
+
+🧠 Assumes you already have Google Drive credentials configured using googleapis and that the customer name + PO number are available in the submission form.
+
+📦 utils/createPoFolders.ts
+ts
+Copy
+Edit
+import { google } from 'googleapis';
+
+export async function createPOFolderStructure(customerName: string, poNumber: string) {
+  const auth = new google.auth.GoogleAuth({
+    scopes: ['https://www.googleapis.com/auth/drive']
+  });
+
+  const drive = google.drive({ version: 'v3', auth });
+
+  const rootFolderName = 'Chaos';
+  const companyFolderName = 'Nicayne Metal Processing - Chaos';
+  const customersFolderName = 'Customers';
+  const poFolderName = `PO#${poNumber}`;
+
+  // 1. Locate or create each layer
+  const rootFolder = await findOrCreateFolder(drive, rootFolderName, null);
+  const clientsFolder = await findOrCreateFolder(drive, 'Clients', rootFolder.id);
+  const companyFolder = await findOrCreateFolder(drive, companyFolderName, clientsFolder.id);
+  const customersFolder = await findOrCreateFolder(drive, customersFolderName, companyFolder.id);
+  const customerFolder = await findOrCreateFolder(drive, customerName, customersFolder.id);
+  const poFolder = await findOrCreateFolder(drive, poFolderName, customerFolder.id);
+
+  // 2. Create subfolders inside PO folder
+  const subfolders = ['Finished Tags', 'Bills of Lading', 'Invoices'];
+  for (const name of subfolders) {
+    await findOrCreateFolder(drive, name, poFolder.id);
+  }
+
+  return poFolder.id;
+}
+
+async function findOrCreateFolder(drive: any, name: string, parentId: string | null) {
+  const query = `name = '${name}' and mimeType = 'application/vnd.google-apps.folder'` +
+    (parentId ? ` and '${parentId}' in parents` : '');
+
+  const res = await drive.files.list({
+    q: query,
+    fields: 'files(id, name)',
+  });
+
+  if (res.data.files.length > 0) {
+    return res.data.files[0];
+  }
+
+  const fileMetadata: any = {
+    name,
+    mimeType: 'application/vnd.google-apps.folder',
+  };
+
+  if (parentId) {
+    fileMetadata.parents = [parentId];
+  }
+
+  const file = await drive.files.create({
+    resource: fileMetadata,
+    fields: 'id',
+  });
+
+  return { id: file.data.id, name };
+}
+🔁 Add this to Work Order Submission Flow
+Wherever you currently process Work Order submissions, call:
+
+ts
+Copy
+Edit
+await createPOFolderStructure(customerName, poNumber);
+This ensures that before anything else happens, your full PO folder and subfolders are set up and ready.

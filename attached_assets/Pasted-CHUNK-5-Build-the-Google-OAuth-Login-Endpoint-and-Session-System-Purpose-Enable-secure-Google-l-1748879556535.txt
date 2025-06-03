@@ -1,0 +1,106 @@
+CHUNK 5: Build the Google OAuth Login Endpoint and Session System
+📌 Purpose:
+Enable secure Google login via OAuth, start a session, store user info, and enforce role-based access.
+
+🧠 CONTEXT FOR REPLIT AGENT:
+We are implementing Google Account Login through OAuth2 using credentials tied to the Nicayne OS system.
+Each user who logs in must:
+
+Authenticate via Google
+
+Be matched to a pre-created user entry (based on email)
+
+Be issued a session cookie
+
+Have access restricted based on their role (admin, operator, viewer, etc.)
+
+Use the domain: nicayneos.com for matching users.
+
+✳️ INSTRUCTIONS TO IMPLEMENT:
+1. Create a new route for OAuth login start:
+python
+Copy
+Edit
+@app.route('/login')
+def login():
+    google = OAuth2Session(
+        client_id=os.environ['GOOGLE_CLIENT_ID'],
+        redirect_uri=os.environ['GOOGLE_REDIRECT_URI'],
+        scope=['https://www.googleapis.com/auth/userinfo.email']
+    )
+    authorization_url, state = google.authorization_url(
+        'https://accounts.google.com/o/oauth2/auth',
+        access_type='offline',
+        prompt='consent'
+    )
+    session['oauth_state'] = state
+    return redirect(authorization_url)
+2. Create a callback route to handle OAuth response and log the user in:
+python
+Copy
+Edit
+@app.route('/oauth2callback')
+def oauth2callback():
+    google = OAuth2Session(
+        client_id=os.environ['GOOGLE_CLIENT_ID'],
+        redirect_uri=os.environ['GOOGLE_REDIRECT_URI'],
+        state=session.get('oauth_state')
+    )
+    token = google.fetch_token(
+        'https://oauth2.googleapis.com/token',
+        client_secret=os.environ['GOOGLE_CLIENT_SECRET'],
+        authorization_response=request.url
+    )
+    session['oauth_token'] = token
+
+    user_info = google.get('https://www.googleapis.com/oauth2/v1/userinfo').json()
+    email = user_info.get('email')
+
+    # Match email to registered system users
+    from utils.user_registry import get_user_by_email
+    user_record = get_user_by_email(email)
+
+    if not user_record:
+        return "❌ Unauthorized: Your email is not registered for this system", 403
+
+    session['user'] = {
+        'email': user_record['email'],
+        'role': user_record['role'],
+        'name': user_record['name']
+    }
+
+    return redirect('/dashboard')
+3. Create utils/user_registry.py to manage user records:
+python
+Copy
+Edit
+# utils/user_registry.py
+
+registered_users = [
+    {'email': 'shayne@nicayneos.com', 'name': 'Shayne', 'role': 'admin'},
+    {'email': 'kp@caios.app', 'name': 'KP Operator', 'role': 'operator'},
+    {'email': 'qa@nicayneos.com', 'name': 'QA Inspector', 'role': 'viewer'},
+    # Add more here
+]
+
+def get_user_by_email(email):
+    return next((u for u in registered_users if u['email'].lower() == email.lower()), None)
+4. Update the dashboard route to check for login + enforce role:
+python
+Copy
+Edit
+@app.route('/dashboard')
+def dashboard():
+    if 'user' not in session:
+        return redirect('/login')
+
+    user = session['user']
+    return render_template('dashboard.html', user=user)
+5. Add a logout route:
+python
+Copy
+Edit
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/')

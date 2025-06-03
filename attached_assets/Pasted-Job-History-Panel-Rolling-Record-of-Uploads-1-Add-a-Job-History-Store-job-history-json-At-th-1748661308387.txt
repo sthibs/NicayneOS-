@@ -1,0 +1,152 @@
+Job History Panel (Rolling Record of Uploads)
+📁 1. Add a Job History Store (job_history.json)
+At the root of your Replit project, create a file called:
+
+pgsql
+Copy
+Edit
+job_history.json
+With this starting content:
+
+json
+Copy
+Edit
+[]
+This will act like a lightweight log database to record past jobs.
+
+🧠 2. Add History Writing Logic to main.py
+Below your update_summary(...) call in the /upload POST route, insert:
+
+python
+Copy
+Edit
+# Append to job history after summary is updated
+history_entry = {
+    "filename": file.filename,
+    "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+    "pages": page_count,
+    "coils": coil_count,
+    "status": "✅ Success" if not error_log else "⚠️ Warnings",
+    "errors": error_log,
+    "backup": backup_path
+}
+
+try:
+    with open("job_history.json", "r") as f:
+        history = json.load(f)
+except:
+    history = []
+
+history.insert(0, history_entry)  # newest first
+with open("job_history.json", "w") as f:
+    json.dump(history, f, indent=2)
+🌐 3. Add a /history Route to main.py
+Still in main.py, add this:
+
+python
+Copy
+Edit
+@app.route("/history")
+def history():
+    try:
+        with open("job_history.json", "r") as f:
+            job_list = json.load(f)
+    except:
+        job_list = []
+    return render_template("history.html", jobs=job_list)
+🧾 4. Create templates/history.html
+html
+Copy
+Edit
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Job History</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; background: #f5f5f5; }
+    h1 { margin-bottom: 20px; }
+    .job {
+      background: white; padding: 20px;
+      border-radius: 10px; margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .job p { margin: 5px 0; }
+    .status-success { color: green; }
+    .status-warning { color: orange; }
+    a.download { display: inline-block; margin-top: 8px; color: #007bff; }
+  </style>
+</head>
+<body>
+  <h1>📜 Job History</h1>
+
+  {% if jobs %}
+    {% for job in jobs %}
+      <div class="job">
+        <p><strong>📄 File:</strong> {{ job.filename }}</p>
+        <p><strong>📅 Time:</strong> {{ job.timestamp }}</p>
+        <p><strong>📄 Pages:</strong> {{ job.pages }}</p>
+        <p><strong>🌀 Coils:</strong> {{ job.coils }}</p>
+        <p>
+          <strong>Status:</strong> 
+          <span class="{% if job.status.startswith('✅') %}status-success{% else %}status-warning{% endif %}">
+            {{ job.status }}
+          </span>
+        </p>
+        {% if job.errors %}
+          <p><strong>Errors:</strong></p>
+          <ul>
+            {% for err in job.errors %}
+              <li style="color:red;">{{ err }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if job.backup %}
+          <a class="download" href="/download-backup?path={{ job.backup }}">⬇️ Download Backup</a>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No jobs yet.</p>
+  {% endif %}
+</body>
+</html>
+🚪 5. Update /download-backup Route
+Change this line:
+
+python
+Copy
+Edit
+@app.route("/download-backup")
+def download_backup():
+To this version that supports both recent and custom downloads:
+
+python
+Copy
+Edit
+@app.route("/download-backup")
+def download_backup():
+    path = request.args.get("path")
+    if not path or not os.path.exists(path):
+        return "Backup not found", 404
+    return send_file(path, as_attachment=True)
+✅ Result
+You now have a rolling visual log of all jobs accessible at:
+
+bash
+Copy
+Edit
+/history
+Each entry shows:
+
+Filename
+
+Date/time
+
+Page and coil count
+
+Status
+
+Any errors
+
+Link to download the JSON backup
+

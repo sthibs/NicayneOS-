@@ -1,0 +1,95 @@
+Here’s Chunk 2, which creates the User Creation Form so you can assign roles and generate system-linked email addresses under @caios.app.
+
+✅ CHUNK 2: User Creation Form with Role Selection and Email Setup
+python
+Copy
+Edit
+# File: routes/user_creation.py
+
+from flask import Blueprint, render_template, request, redirect, url_for
+from utils.user_roles import USER_ROLES
+import json
+import os
+
+user_creation_bp = Blueprint('user_creation', __name__, template_folder='../templates')
+
+USERS_FILE = 'data/users.json'  # Persistent user store (can later be migrated to Sheets or Firestore)
+
+@user_creation_bp.route('/create_user', methods=['GET', 'POST'])
+def create_user():
+    if request.method == 'POST':
+        full_name = request.form.get('full_name')
+        email_prefix = request.form.get('email_prefix')  # e.g., "john"
+        role = request.form.get('role')
+
+        user_email = f"{email_prefix}@caios.app"
+
+        new_user = {
+            "name": full_name,
+            "email": user_email,
+            "role": role,
+            "permissions": USER_ROLES[role]["can_access"]
+        }
+
+        # Load or initialize user file
+        if os.path.exists(USERS_FILE):
+            with open(USERS_FILE, 'r') as f:
+                users = json.load(f)
+        else:
+            users = []
+
+        users.append(new_user)
+
+        with open(USERS_FILE, 'w') as f:
+            json.dump(users, f, indent=4)
+
+        return redirect(url_for('user_creation.user_created', email=user_email))
+
+    return render_template('create_user.html', roles=USER_ROLES)
+
+@user_creation_bp.route('/user_created')
+def user_created():
+    email = request.args.get('email')
+    return f"✅ User created: {email} — system ready to assign OAuth and access."
+🖥️ Template: create_user.html
+html
+Copy
+Edit
+<!-- File: templates/create_user.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create User - Nicayne OS</title>
+</head>
+<body>
+    <h2>Create New User</h2>
+    <form method="POST">
+        <label>Full Name:</label><br>
+        <input type="text" name="full_name" required><br><br>
+
+        <label>Email Prefix (e.g., "john" → john@caios.app):</label><br>
+        <input type="text" name="email_prefix" required><br><br>
+
+        <label>User Role:</label><br>
+        <select name="role">
+            {% for role_key, role_info in roles.items() %}
+                <option value="{{ role_key }}">{{ role_info.description }}</option>
+            {% endfor %}
+        </select><br><br>
+
+        <button type="submit">Create User</button>
+    </form>
+</body>
+</html>
+✅ What This Chunk Does:
+Adds a secure route /create_user to register new Nicayne OS users
+
+Takes name, email prefix, and role
+
+Constructs their email (e.g. billy@caios.app)
+
+Saves everything to a local users.json file with role and permissions
+
+Displays a confirmation message upon success
+

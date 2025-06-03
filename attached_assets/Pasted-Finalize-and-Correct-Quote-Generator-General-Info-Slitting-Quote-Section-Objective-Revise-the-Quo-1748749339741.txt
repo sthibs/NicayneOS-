@@ -1,0 +1,61 @@
+Finalize and Correct Quote Generator General Info + Slitting Quote Section
+Objective:
+Revise the Quote Generator form by rebuilding the General Job Information section (based on original sketch) and finalizing the Slitting Jobs quote structure with all required logic and fields.
+
+✅ PART 1: General Job Information – Quote Form
+🔁 Reference: Original work order sketch IMG_E8E0B5C3-A399-4367-BD60-114C86FEE855.jpeg
+
+Rebuild the top section of the Quote Generator form with the following fields:
+
+Field Label	Type	Notes
+Quote Number	Auto-generated	Format: Q-yyyyMMdd-hhmmss
+Customer Name	Text	Required
+Date Required	Date picker	Required
+Date Created	Auto-filled	Current date
+Packaging Instructions / Customer Request	Textarea (full width)	Optional
+Max Bundle/Skid Weight	Text	e.g. “5000 lbs”
+Requested Pieces Per Skid	Text	e.g. “10”
+Max OD	Text	e.g. “72 inches”
+Wood Spacers	Checkbox (Y/N)	
+Paper Wrapped	Checkbox (Y/N)	
+Edge Protectors	Checkbox (Y/N)	
+Coil Direction on Skid	Radio (CW/CCW)	
+Split Coil?	Checkbox	Optional
+
+🚫 Do NOT include: Work Order # or Customer PO – these will not exist at this stage.
+
+✅ PART 2: Tolerance Logic
+Allow the user to dynamically add multiple tolerance sets with an “+ Add Tolerance Set” button.
+
+Each set includes:
+
+Thickness Tolerance (e.g. ±.005)
+
+Width Tolerance (e.g. ±.010)
+
+Length Tolerance (e.g. ±.250 / –.000)
+
+✅ PART 3: Slitting Jobs – Quote Form Section
+Each Slitting Job quote entry should follow the same layout and functionality as the work order form (minus customer tags), with one extra field:
+
+Field Label	Notes
+Material Grade	
+Coil Description	
+Incoming Weight (lbs)	
+Incoming Coils	
+OD Size (in)	Auto-generated from thickness, width, weight, ID (use 20" default)
+PIW (lbs/in)	Auto-generated using formula: weight ÷ (thickness × width)
+Slitter Setup	
+Number of Skids	New field – Required
+
+Users must be able to click “+ Add Slitting Job” to dynamically add multiple slitting entries.
+
+🧮 Auto Calculations (Slitting Jobs):
+OD Size: Based on coil ID (in), weight, and dimensions. Use placeholder logic if full equation not yet implemented.
+
+PIW: weight ÷ (thickness × width) – Use .2836 density for steel in future steps if needed.
+
+🗂️ Logging Requirement
+Log all quote entries into the Quotes tab of the Nicayne System Sheet alongside Quote Number, Date, Customer Name, and Summary Totals.
+
+This spreadsheet lives in the same Google Sheet where other system logs (e.g., Work Orders, Finished Tags) are stored.

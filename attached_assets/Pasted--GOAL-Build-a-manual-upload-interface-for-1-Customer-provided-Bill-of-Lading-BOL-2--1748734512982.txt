@@ -1,0 +1,55 @@
+ ✅ GOAL:
+# Build a manual upload interface for:
+# 1. Customer-provided Bill of Lading (BOL)
+# 2. Customer’s original Purchase Order (PO)
+
+# ✅ DESTINATIONS:
+# • Customer’s uploaded **BOLs** (manual + extracted) will go to:
+#   → /Chaos/Clients/Nicayne Metal Processing - Chaos/Customers/[Customer]/Uploaded BOLs/[BL######].pdf
+#
+# • Customer’s original **PO** will go to:
+#   → /Chaos/Clients/Nicayne Metal Processing - Chaos/Customers/[Customer]/PO#[PO####]/Customer PO.pdf
+
+# ✅ ROUTE:
+# /manual-upload
+
+# ✅ UI REQUIREMENTS:
+# - Customer selector (dropdown or autocomplete)
+# - File type selector (BOL or Original PO)
+# - PO# or BOL# input field (used to properly name and place file)
+# - File upload input
+# - Upload button
+# - Confirmation message with Drive file preview link
+
+# ✅ FUNCTIONALITY:
+# - When uploading a Customer BOL:
+#   - Prompt for BOL#
+#   - Save as: `BL######.pdf` in the Uploaded BOLs subfolder under the customer
+#   - Create Uploaded BOLs folder if not already present
+
+# - When uploading Original PO:
+#   - Prompt for PO#
+#   - Save as: `Customer PO.pdf` inside:
+#     /[Customer]/PO#[PO####]/
+#   - Create PO# folder if not already present
+
+# ✅ LOGIC:
+# - All uploaded BOLs (manual + auto-extracted) should live together in the **Uploaded BOLs** folder under each customer
+# - Uploaded BOLs should always be saved by their BOL number (e.g., `BL023456.pdf`)
+# - System should confirm if file already exists before overwriting
+
+# ✅ VISUAL STYLE:
+# - Match Nicayne OS theme: dark navy base (#00203F), neutral background (#F2F2F2), accent blue (#005baa)
+# - Section headers: “Upload Customer BOL” / “Upload Original PO”
+# - Large upload zones with drag & drop support (if feasible)
+
+# ✅ FUTURE OPTIONS:
+# - Add OCR scan on uploaded BOL to extract basic info
+# - Allow uploading multiple BOLs at once
+# - Add signed copy upload under same BOL#
+
+This will give your team and customers a clean UI for manually uploading both:
+
+📄 Original Purchase Orders
+
+📦 Customer Bills of Lading (manual uploads or automated, all in one place)

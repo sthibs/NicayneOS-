@@ -1,0 +1,108 @@
+ Invoice Generator. This includes:
+
+CWT and Lot-based billing support
+
+Size grouping logic
+
+Proper invoice formatting for manufacturing
+
+Integration with existing PO/work order/BOL data
+
+PDF generation and filing logic
+
+✅ Replit Prompt – Chunk A-7: Invoice Generator (with CWT + Lot Pricing)
+python
+Copy
+Edit
+# ✅ GOAL:
+# Build an Invoice Generator tool that creates a properly formatted manufacturing invoice
+# based on:
+#   - the Work Order #
+#   - Finished Tags
+#   - Pricing method: CWT (per 100 lbs) or Lot Price (fixed total)
+
+# ✅ ROUTE:
+# /generate-invoice
+
+# ✅ FORM UI:
+# - Select Customer (dropdown)
+# - Input Work Order # (autocomplete from existing)
+# - Auto-fetch:
+#   - Customer PO
+#   - BOL #
+#   - All Finished Tags tied to the Work Order
+
+# - Choose Pricing Method:
+#   [ ] CWT (per 100 lbs)
+#     → Input Rate (e.g., $12.50 per CWT)
+#   [ ] Lot Price
+#     → Input Flat Amount (e.g., $1,500.00)
+
+# - Auto-group tags by material size:
+#   - For each size (e.g., 0.250 x 6 x 240):
+#     → Show total pieces and total weight
+
+# - Optional Notes or Custom Charges (textarea)
+
+# ✅ PDF CONTENT:
+# - Header: Nicayne Metal Processing Ltd.
+# - Invoice Title and Date
+# - Bill To: [Customer Name]
+# - PO Number
+# - Work Order #
+# - BOL Number
+
+# - Table:
+#   | Material Description | Pieces | Weight (lbs) | Rate Type | Rate | Subtotal |
+#   - One row per unique material size
+#   - Rate Type: "CWT" or "Lot"
+#   - If CWT: Subtotal = (weight / 100) * rate
+#   - If Lot: Subtotal = flat rate (only 1 row allowed)
+
+# - Bottom Section:
+#   - Subtotal
+#   - Tax (if applicable, disabled for now)
+#   - Grand Total
+#   - Optional Notes
+
+# - Footer:
+#   - “Thank you for your business” or custom message
+#   - Payment terms (Net 30, Wire Transfer, etc.)
+#   - Contact info for accounting
+
+# ✅ LOGIC:
+# - Use Work Order # to pull all tags from FINISHED_TAGS or JSON index
+# - Auto-group by material size
+# - Round weights to nearest lb
+# - Only one pricing method allowed per invoice
+# - If user selects CWT, calculate each row
+# - If user selects Lot, show only one row with grand total
+
+# ✅ FILE HANDLING:
+# - PDF file naming:
+#   NMP-INVOICE-[DATE]-WO[#####]-PO[#####].pdf
+# - Store in:
+#   /Chaos/Clients/Nicayne Metal Processing - Chaos/Customers/[Customer]/PO#[PO#]/Invoice.pdf
+# - Add to FINISHED_TAGS or INVOICE_LOG sheet if available
+
+# ✅ UI STYLE:
+# - Use Nicayne OS dark blue & gray theme
+# - Clean, easy-to-read form
+# - Smart validation: only allow 1 pricing type, auto-complete PO/WO where possible
+
+# ✅ FUTURE ADD-ONS:
+# - QuickBooks export or integration
+# - Email invoice directly to customer
+# - Add payment status tracking
+📌 Summary
+This prompt builds a full-featured invoice generator that:
+
+Pulls tag data from work orders
+
+Groups by material size
+
+Supports both weight-based and flat-rate pricing
+
+Generates a clean, printable PDF
+
+Files the invoice in the proper PO folder on Google Drive

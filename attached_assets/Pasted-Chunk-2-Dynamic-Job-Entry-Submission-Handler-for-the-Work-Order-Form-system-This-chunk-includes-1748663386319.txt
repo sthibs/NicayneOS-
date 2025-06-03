@@ -1,0 +1,129 @@
+Chunk 2: Dynamic Job Entry & Submission Handler for the Work Order Form system.
+
+This chunk includes:
+
+✅ Dynamic display of Cut to Length and Slitting job forms based on selected process
+
+✅ Ability to add multiple jobs per type
+
+✅ Submission handler (placeholder for now) that captures all form data
+
+🧱 1. Add JavaScript to work_order_form.html
+Insert the following before the closing </body> tag:
+
+html
+Copy
+Edit
+<script>
+  const processSelect = document.querySelector('select[name="process_type"]');
+  const ctlSection = document.getElementById('cut-to-length-section');
+  const slitSection = document.getElementById('slitting-section');
+
+  function createCTLJob(index) {
+    return `
+      <div class="job-block" style="border:1px solid #ccc; padding:15px; margin-bottom:15px;">
+        <h4>Cut to Length Job ${index + 1}</h4>
+        <label>Material Grade</label>
+        <input type="text" name="ctl_grade_${index}">
+        <label>Material Description</label>
+        <input type="text" name="ctl_description_${index}">
+        <label>Incoming Coils</label>
+        <input type="text" name="ctl_incoming_${index}">
+        <label>Incoming Weight (lbs)</label>
+        <input type="text" name="ctl_weight_in_${index}">
+        <label>Finished Pieces</label>
+        <input type="text" name="ctl_pieces_out_${index}">
+        <label>Finished Weight</label>
+        <input type="text" name="ctl_weight_out_${index}">
+        <label>Pack Instructions</label>
+        <input type="text" name="ctl_pack_${index}">
+        <label>Customer Tags</label>
+        <input type="text" name="ctl_tags_${index}">
+      </div>`;
+  }
+
+  function createSlitJob(index) {
+    return `
+      <div class="job-block" style="border:1px solid #ccc; padding:15px; margin-bottom:15px;">
+        <h4>Slitting Job ${index + 1}</h4>
+        <label>Material Grade</label>
+        <input type="text" name="slit_grade_${index}">
+        <label>Coil Description</label>
+        <input type="text" name="slit_description_${index}">
+        <label>Slitter Setup (e.g. 3 cuts @ 1.25")</label>
+        <input type="text" name="slit_setup_${index}">
+        <label>Pack Instructions</label>
+        <input type="text" name="slit_pack_${index}">
+        <label>Customer Tags</label>
+        <input type="text" name="slit_tags_${index}">
+      </div>`;
+  }
+
+  const ctlJobs = [];
+  const slitJobs = [];
+
+  const addCTLButton = document.createElement('button');
+  addCTLButton.textContent = "➕ Add CTL Job";
+  addCTLButton.type = "button";
+  addCTLButton.onclick = () => {
+    const index = ctlJobs.length;
+    const html = createCTLJob(index);
+    ctlJobs.push(html);
+    ctlSection.insertAdjacentHTML('beforeend', html);
+  };
+
+  const addSlitButton = document.createElement('button');
+  addSlitButton.textContent = "➕ Add Slitting Job";
+  addSlitButton.type = "button";
+  addSlitButton.onclick = () => {
+    const index = slitJobs.length;
+    const html = createSlitJob(index);
+    slitJobs.push(html);
+    slitSection.insertAdjacentHTML('beforeend', html);
+  };
+
+  processSelect.addEventListener('change', () => {
+    ctlSection.innerHTML = '';
+    slitSection.innerHTML = '';
+    ctlJobs.length = 0;
+    slitJobs.length = 0;
+
+    const value = processSelect.value;
+    if (value === "cut_to_length") {
+      ctlSection.appendChild(addCTLButton);
+      addCTLButton.click();
+    } else if (value === "slitting") {
+      slitSection.appendChild(addSlitButton);
+      addSlitButton.click();
+    } else if (value === "both") {
+      ctlSection.appendChild(addCTLButton);
+      slitSection.appendChild(addSlitButton);
+      addCTLButton.click();
+      addSlitButton.click();
+    }
+  });
+</script>
+🧠 What This Does:
+When a user selects Slitting, Cut to Length, or Both, it dynamically shows the relevant job forms
+
+Each form supports multiple job entries via “Add Job” buttons
+
+Input names are structured (ctl_description_0, slit_tags_2, etc.) for easy parsing
+
+✅ 2. Update /work-order-form route in main.py to pass date
+Update your route to include today’s date in the form:
+
+python
+Copy
+Edit
+from datetime import datetime
+
+@app.route("/work-order-form", methods=["GET", "POST"])
+def work_order_form():
+    if request.method == "POST":
+        form_data = request.form.to_dict(flat=False)  # capture all submitted data
+        print("Form submitted:", form_data)  # TEMP: will process in Chunk 3
+        return "Work order received! (Export logic coming next)"
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    return render_template("work_order_form.html", date=today)

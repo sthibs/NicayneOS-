@@ -1,0 +1,69 @@
+ SYSTEM AUDIT & PORTABILITY TEST – INSTRUCTION PROMPT
+Please run a full system-wide audit, scan, and debug on the Nicayne Metal Processing OS to ensure:
+
+✅ FUNCTIONALITY CHECK
+All forms (Work Order, Finished Tags, BOL, Invoice, Quotes, etc.) render correctly and submit data as intended.
+
+Auto-generation features (work order numbers, tag numbers, BOL numbers, invoices, quote calculations) are working as expected.
+
+Calculations (OD, PIW, finished piece estimates) are producing accurate results.
+
+UI components (dropdowns, dynamic item additions, toggles) are functional and responsive.
+
+Data extraction components (quote OCR extractor, BOL extractor) are returning the correct structured data.
+
+📁 FILE & DATA ROUTING CHECK
+Every generated PDF (work order, tag, BOL, invoice) is being routed to the correct Google Drive path:
+
+My Drive > Chaos > Clients > Nicayne Metal Processing - Chaos > Customers > [Customer] > PO#[Number]
+
+Uploaded files (Customer BOLs, original POs, quotes) are landing in the correct customer and PO folders.
+
+All records are logged in the Nicayne System Sheet where applicable (Quotes, Work Orders, Tags, etc.).
+
+File naming conventions are consistent (e.g., NMP-FINISHED-TAG-[DATE]-[WO#]-[PCS]pcs.pdf).
+
+🔒 INTEGRITY AND ERROR HANDLING
+Catch all common error conditions (e.g., missing PO, failed PDF upload, Google Sheets API errors).
+
+Verify fallback logic is active (e.g., local JSON backup if Google API fails).
+
+All required fields are validated on form submission.
+
+Audit integrity dashboards (e.g., invoice tracker) return true and current results based on actual data.
+
+📦 PORTABILITY TEST
+Confirm all paths, secrets, and credentials are environment-variable driven.
+
+No hardcoded references to specific file IDs, local paths, or restricted user tokens.
+
+Modular structure allows system to be:
+
+Packaged into a portable deployment bundle
+
+Re-used or deployed for another customer or plant with only minimal input/config changes (e.g., folder IDs, branding, logo)
+
+System should be exportable and redeployable with minimal setup via .env and credentials injection.
+
+📊 REPORT REQUEST
+After completing the above:
+
+Return a detailed summary report showing:
+
+✔ Passed Checks
+
+⚠ Warnings
+
+❌ Errors
+
+📌 Suggestions
+
+Include a section specifically covering portability findings:
+
+What’s currently portable?
+
+What still needs to be parameterized or restructured?
+
+Confidence score in system transportability
+
+Once this test is complete, I’d like to review the full output report before moving forward. Please ensure no functionality is skipped or assumed. Test the entire stack.

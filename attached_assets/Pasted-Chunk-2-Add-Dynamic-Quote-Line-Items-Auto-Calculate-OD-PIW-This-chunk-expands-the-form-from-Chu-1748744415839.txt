@@ -1,0 +1,98 @@
+Chunk 2: Add Dynamic Quote Line Items + Auto-Calculate OD & PIW
+This chunk expands the form from Chunk 1 by allowing users to:
+
+Dynamically add multiple quoted items (coils or bundles).
+
+Automatically calculate OD (Outside Diameter) and PIW (Pounds per Inch of Width) for each entry.
+
+Ensure all quote lines remain editable and styled consistently.
+
+🧩 Functional Goals
+Add “+ Add Item” button that duplicates the item input row.
+
+Each item has its own auto-calculated OD & PIW.
+
+All values remain editable by user.
+
+Internal state updates cleanly with each added/removed line.
+
+🧠 Formula Recap for Replit
+PIW (lbs/inch width): PIW = weight / width
+
+OD Estimate (approx):
+OD = sqrt((4 × weight) / (π × density × width × thickness) + ID²)
+Where density = 0.2836 lbs/in³ for steel.
+
+🧱 Code Implementation (React-like JSX + JS example)
+jsx
+Copy
+Edit
+import React, { useState } from "react";
+
+const defaultItem = {
+  thickness: "",
+  width: "",
+  length: "",
+  weight: "",
+  id: "",
+  quantity: "",
+  od: "",
+  piw: "",
+};
+
+const QuoteForm = () => {
+  const [items, setItems] = useState([ { ...defaultItem } ]);
+
+  const handleInputChange = (index, field, value) => {
+    const newItems = [...items];
+    newItems[index][field] = value;
+
+    const { thickness, width, weight, id } = newItems[index];
+    if (thickness && width && weight && id) {
+      const t = parseFloat(thickness);
+      const w = parseFloat(width);
+      const wt = parseFloat(weight);
+      const inner = parseFloat(id);
+      const density = 0.2836;
+
+      const piw = wt / w;
+      const odSquared = ((4 * wt) / (Math.PI * density * w * t)) + (inner * inner);
+      const od = Math.sqrt(odSquared);
+
+      newItems[index].piw = piw.toFixed(2);
+      newItems[index].od = od.toFixed(2);
+    }
+
+    setItems(newItems);
+  };
+
+  const addItem = () => {
+    setItems([...items, { ...defaultItem }]);
+  };
+
+  return (
+    <div className="quote-form">
+      {items.map((item, index) => (
+        <div key={index} className="quote-line">
+          <input placeholder="Thickness" value={item.thickness}
+            onChange={(e) => handleInputChange(index, "thickness", e.target.value)} />
+          <input placeholder="Width" value={item.width}
+            onChange={(e) => handleInputChange(index, "width", e.target.value)} />
+          <input placeholder="Length" value={item.length}
+            onChange={(e) => handleInputChange(index, "length", e.target.value)} />
+          <input placeholder="Weight (lbs)" value={item.weight}
+            onChange={(e) => handleInputChange(index, "weight", e.target.value)} />
+          <input placeholder="Coil ID (in)" value={item.id}
+            onChange={(e) => handleInputChange(index, "id", e.target.value)} />
+          <input placeholder="Quantity" value={item.quantity}
+            onChange={(e) => handleInputChange(index, "quantity", e.target.value)} />
+          <div>OD: {item.od} in</div>
+          <div>PIW: {item.piw} lbs/in</div>
+        </div>
+      ))}
+      <button onClick={addItem}>+ Add Item</button>
+    </div>
+  );
+};
+
+export default QuoteForm;

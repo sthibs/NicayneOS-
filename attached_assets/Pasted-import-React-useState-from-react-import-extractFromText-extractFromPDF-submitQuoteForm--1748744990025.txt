@@ -1,0 +1,71 @@
+import React, { useState } from "react";
+import { extractFromText, extractFromPDF, submitQuoteForm } from "@/lib/quoteActions";
+
+export default function QuoteIntakeForm() {
+  const [emailText, setEmailText] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [extractedData, setExtractedData] = useState(null);
+  const [formFields, setFormFields] = useState({ customer: "", po: "", items: [] });
+
+  const handleExtractEmail = async () => {
+    const data = await extractFromText(emailText);
+    setExtractedData(data);
+  };
+
+  const handleExtractPDF = async () => {
+    if (!pdfFile) return;
+    const data = await extractFromPDF(pdfFile);
+    setExtractedData(data);
+  };
+
+  const handleSubmit = async () => {
+    await submitQuoteForm(formFields, pdfFile);
+    alert("Quote submitted and logged.");
+  };
+
+  return (
+    <div className="p-4 space-y-6">
+      <h2 className="text-xl font-bold">Submit a Quote</h2>
+
+      <div className="space-y-4">
+        <textarea
+          placeholder="Paste quote email here..."
+          className="w-full p-2 border"
+          value={emailText}
+          onChange={(e) => setEmailText(e.target.value)}
+        />
+        <button onClick={handleExtractEmail} className="btn">Extract from Email</button>
+
+        <input type="file" accept="application/pdf" onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
+        <button onClick={handleExtractPDF} className="btn">Extract from PDF</button>
+      </div>
+
+      {extractedData && (
+        <div className="mt-6 border p-4">
+          <h3 className="font-semibold">Extracted Info</h3>
+          <pre>{JSON.stringify(extractedData, null, 2)}</pre>
+        </div>
+      )}
+
+      {/* Manual Quote Form (simplified) */}
+      <div className="mt-6 space-y-2">
+        <input
+          type="text"
+          placeholder="Customer"
+          className="border p-2 w-full"
+          value={formFields.customer}
+          onChange={(e) => setFormFields({ ...formFields, customer: e.target.value })}
+        />
+        <input
+          type="text"
+          placeholder="Customer PO"
+          className="border p-2 w-full"
+          value={formFields.po}
+          onChange={(e) => setFormFields({ ...formFields, po: e.target.value })}
+        />
+        {/* Add coil line items dynamically here */}
+        <button onClick={handleSubmit} className="btn btn-primary mt-4">Submit Quote</button>
+      </div>
+    </div>
+  );
+}
